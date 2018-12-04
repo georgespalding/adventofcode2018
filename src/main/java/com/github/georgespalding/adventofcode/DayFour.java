@@ -2,53 +2,73 @@ package com.github.georgespalding.adventofcode;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
-import static java.util.Arrays.stream;
+import static java.util.Comparator.comparingDouble;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DayThree {
+public class DayFour {
 
    static final long load = currentTimeMillis();
 
-   private static Claim[] claims = Util.streamResource("3.lst")
-      .map(LineParser::new)
-      .map(LineParser::parseClaim)
-      .toArray(Claim[]::new);
+   //   private static String[] lines = Util.streamResource("4.lst")
+   //      .map(LineParser::new)
+   //      .map(LineParser::parseClaim)
+   //      .toArray(Claim[]::new)
+   //      ;
 
    public static void main(String[] args) {
       final long start = currentTimeMillis();
+      final Map<Integer, List<GuardShift>> shiftsByGuardId = Util.streamResource("4.lst")
+         .sorted()
+         .map(LineParser::new)
+         .map(LineParser::parseGuardLogEntry)
+         .collect(groupingBy(GuardEvent::getDate))
+         .values().stream()
+         .map(GuardShift::new)
+         .collect(groupingBy(GuardShift::getGuardId));
 
-      final Point lowerRight = new Point(
-         stream(claims).mapToInt(c -> c.rect.x + c.rect.width).max().getAsInt(),
-         stream(claims).mapToInt(c -> c.rect.y + c.rect.height).max().getAsInt());
+      shiftsByGuardId.values().stream().flatMap(Collection::stream)
+         .forEach(out::println);
+      final List<GuardShift> snooziestGuardShifts = shiftsByGuardId.values().stream()
+         .map(guardShifts -> Pair.fromEntry(
+            // Avg nap time per shift
+            guardShifts.stream().mapToInt(GuardShift::totalNapMinutes).sum()
+               / (double) guardShifts.size(),
+            // GuardId
+            guardShifts))
+         .sorted(comparingDouble(integerDoublePair -> -integerDoublePair.getKey()))
+         .peek(p -> out.printf("%5d: %+2.2f m/shift\n", p.getVal().get(0).getGuardId(), p.getKey()))
+         .findFirst().get().getVal();
 
-      final int[][] matrix = new int[lowerRight.x][lowerRight.y];
-      stream(claims).map(c -> c.rect).forEach(r -> paint(matrix, r));
+      int bestMinute = snooziestGuardShifts.stream()
+         .map(GuardShift::getNaps)
+         .flatMap(Collection::stream)
+         .flatMapToInt(GuardShift.Nap::sleepMinutes)
+         .boxed()
+         .collect(toMap(m -> m, m->1, (a, b) -> a + b))
+         .entrySet().stream()
+         .sorted(comparingInt(each->-each.getValue()))
+         .peek(e->out.println("Minute: "+e.getKey()+" "+ IntStream.range(0,e.getValue()).mapToObj(i->"Z").collect(joining())))
+         .findFirst().get().getKey();
 
-      final long overlapping = stream(matrix)
-         .map(IntStream::of)
-         .flatMapToInt(is -> is)
-         .filter(i -> i > 1).count();
-
+      final int ans1=snooziestGuardShifts.get(0).getGuardId()*bestMinute;
       final long mid = currentTimeMillis();
-
-      final List<Claim> nonOverlapping = stream(claims).parallel()
-         .filter(claim -> stream(claims)
-            // Don't compare a claim with itself
-            .filter(other -> !claim.equals(other))
-            .noneMatch(other -> claim.rect.intersects(other.rect)))
-         .collect(Collectors.toList());
 
       final long end = currentTimeMillis();
 
       out.printf("Load: (%d ms)\n", start - load);
-      out.printf("Ans1: %s (%d ms)\n", overlapping, mid - start);
-      out.printf("Ans2: %s (%d ms)\n", nonOverlapping, end - mid);
+      out.printf("Ans1: %s (%d ms)\n", ans1, mid - start);
+      out.printf("Ans2: %s (%d ms)\n", "TODO", end - mid);
       out.printf("Total (%d ms)\n", end - start);
 
       //displayClaims(Arrays.asList(claims), lowerRight, nonOverlapping);
@@ -130,7 +150,7 @@ public class DayThree {
       }
 
       private void hilite(Graphics g, Rectangle rect) {
-         Point center = new java.awt.Point((int) rect.getCenterX(), (int) rect.getCenterY());
+         Point center = new Point((int) rect.getCenterX(), (int) rect.getCenterY());
          delta = (1 + delta) % 50;
          drawOval(g, center, 50, 50);
          drawOval(g, center, 100, 50 - delta);

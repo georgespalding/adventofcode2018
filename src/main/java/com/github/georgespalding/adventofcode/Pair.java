@@ -21,6 +21,14 @@ public class Pair<K, V> {
       return new Pair<>(entry.getKey(), entry.getValue());
    }
 
+   public K getKey() {
+      return key;
+   }
+
+   public V getVal() {
+      return val;
+   }
+
    @Override
    public String toString() {
       return "{" + key + ": " + val + '}';

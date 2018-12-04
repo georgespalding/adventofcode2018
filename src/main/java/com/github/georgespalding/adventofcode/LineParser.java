@@ -1,6 +1,12 @@
 package com.github.georgespalding.adventofcode;
 
+import static com.github.georgespalding.adventofcode.GuardEvent.Event.FallAsleep;
+import static com.github.georgespalding.adventofcode.GuardEvent.Event.WakeUp;
+
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 class LineParser {
 
@@ -25,7 +31,7 @@ class LineParser {
       return Integer.parseInt(next(delim));
    }
 
-   Claim parse() {
+   Claim parseClaim() {
       return new Claim(
          next('@'),
          new Rectangle(
@@ -33,5 +39,22 @@ class LineParser {
             nextInt(':'),
             nextInt('x'),
             nextInt('<')));
+   }
+
+   GuardEvent parseGuardLogEntry() {
+      next('[');
+      LocalDateTime timestamp = LocalDateTime.parse(next(' ') + "T" + next(']'));
+      LocalDate datestamp = timestamp.truncatedTo(ChronoUnit.HOURS).plusHours(1).toLocalDate();
+      next(' ');
+      String remainder = next('#');
+      switch (remainder) {
+         case "falls asleep":
+            return new GuardEvent(datestamp, timestamp, FallAsleep);
+         case "wakes up":
+            return new GuardEvent(datestamp, timestamp, WakeUp);
+         case "Guard":
+            return new GuardBeginShift(datestamp, timestamp, nextInt(' '));
+      }
+      throw new IllegalArgumentException("Could not parse '"+line+"'");
    }
 }
