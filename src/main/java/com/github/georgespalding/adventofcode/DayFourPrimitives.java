@@ -2,11 +2,13 @@ package com.github.georgespalding.adventofcode;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
-import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+
+import org.eclipse.collections.api.tuple.primitive.IntObjectPair;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,12 +17,13 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DayFour {
+@SuppressWarnings("Duplicates")
+public class DayFourPrimitives {
 
    static final long load = currentTimeMillis();
 
    public static void main(String[] args) {
-      final List<Pair<Integer, List<Nap>>> napsByGuardId = Util.streamResource("4.lst")
+      List<IntObjectPair<List<Nap>>> napsByGuardId = Util.streamResource("4.lst")
          .sorted()
          .map(LineParser::new)
          .map(LineParser::parseGuardLogEntry)
@@ -30,22 +33,21 @@ public class DayFour {
          .collect(groupingBy(GuardShift::getGuardId))
          .entrySet()
          .stream()
-         .map(each -> Pair.fromEntry(
+         .map(each -> PrimitiveTuples.pair(
             each.getKey(),
             each.getValue().stream()
                .map(GuardShift::getNaps)
                .flatMap(Collection::stream)
                .collect(toList())))
          .collect(toList());
-      
       final long start = currentTimeMillis();
 
-      final Pair<Integer, List<Nap>> napsOfSnooziestGuard = napsByGuardId.stream()
+      final IntObjectPair<List<Nap>> napsOfSnooziestGuard = napsByGuardId.stream()
          //.peek(p -> out.printf("#%5d: %4d m\n", p.getKey(), p.getVal().stream().mapToInt(Nap::duration).sum()))
-         .min(comparingInt(p -> -p.getVal().stream().mapToInt(Nap::duration).sum()))
-         .orElseGet(()->Pair.fromEntry(-1, emptyList()));
+         .min(comparingInt(p -> -p.getTwo().stream().mapToInt(Nap::duration).sum()))
+         .orElse(null);
 
-      final int bestMinute = napsOfSnooziestGuard.getVal().stream()
+      final int bestMinute = napsOfSnooziestGuard.getTwo().stream()
          .flatMapToInt(Nap::sleepMinutes)
          .boxed()
          .collect(toMap(m -> m, m -> 1, (a, b) -> a + b))
@@ -54,13 +56,13 @@ public class DayFour {
          .min(comparingInt(each -> -each.getValue()))
          .map(Entry::getKey).orElse(-1);
 
-      final int ans1 = napsOfSnooziestGuard.getKey() * bestMinute;
+      final int ans1 = napsOfSnooziestGuard.getOne() * bestMinute;
       final long mid = currentTimeMillis();
 
       //List<Pair<Integer, List<Nap>>>
       final Pair<Integer, Integer> ans2 = napsByGuardId.stream().map(p -> Pair.fromEntry(
-         p.key,
-         p.val.stream()
+         p.getOne(),
+         p.getTwo().stream()
             .flatMapToInt(Nap::sleepMinutes)
             .boxed()
             .collect(toMap(m -> m, m -> 1, (a, b) -> a + b))
@@ -69,8 +71,7 @@ public class DayFour {
             //.peek(e -> out.printf("#%5d Minute: %2d %s",p.key,e.getKey(),"Z".repeat(e.getValue())))
             .min(comparingInt(each -> -each.getValue()))
             .map(Entry::getKey).orElse(0)))
-         .findFirst()
-         .orElseGet(()->Pair.fromEntry(-1,-1));
+         .findFirst().get();
 
       final long end = currentTimeMillis();
 
