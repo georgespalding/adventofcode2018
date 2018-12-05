@@ -81,7 +81,6 @@ public class DayFour {
 
       //displayClaims(Arrays.asList(claims), lowerRight, nonOverlapping);
       //printClaims(matrix);
-
    }
 
    private static void printClaims(int[][] matrix) {
