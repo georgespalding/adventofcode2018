@@ -11,6 +11,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.IntStream.rangeClosed;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,20 +69,37 @@ public class DaySix {
 
       out.println("Edges:    " + edgePoints);
       out.println("Internal: " + remainingPoints);
-      plotPoints(
-         new Point(
-            extremes.get(Direction.LEFT).getX(),
-            extremes.get(Direction.DOWN).getY(),
-            "LOWER_LEFT"),
-         new Point(
-            extremes.get(Direction.RIGHT).getX(),
-            extremes.get(Direction.UP).getY(),
-            "UPPER_RIGHT"),
-         edgePoints,
-         remainingPoints,
-         asList(points));
+      final Point lower_left = new Point(
+         extremes.get(Direction.LEFT).getX(),
+         extremes.get(Direction.DOWN).getY(),
+         "LOWER_LEFT");
+      final Point upper_right = new Point(
+         extremes.get(Direction.RIGHT).getX(),
+         extremes.get(Direction.UP).getY(),
+         "UPPER_RIGHT");
+      //      plotPoints(
+      //         lower_left,
+      //         upper_right,
+      //         edgePoints,
+      //         remainingPoints,
+      //         asList(points));
       out.println(remainingPoints.size());
       out.println("======================");
+
+      calcDistances(lower_left, upper_right, asList(points));
+   }
+
+   private static void calcDistances(Point LOWERLEFT, Point UPPERRIGHT, List<Point> points) {
+      final long region = rangeClosed(LOWERLEFT.getY(), UPPERRIGHT.getY())
+         .mapToObj(y -> rangeClosed(LOWERLEFT.getX(), UPPERRIGHT.getX()).mapToObj(x -> new Point(x, y, " ")))
+         .flatMap(identity())
+         .map(loc -> Pair.fromEntry(loc, points.stream().mapToInt(loc::manhattanDistance).sum()))
+         .sorted(comparingInt(p -> p.getVal()))
+         //.peek(out::println)
+         .takeWhile(p -> p.getVal() < 10000)
+         .count();
+      //.collect(Collectors.toList());
+      out.println(region);
    }
 
    private static void plotPoints(
