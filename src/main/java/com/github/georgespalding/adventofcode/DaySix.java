@@ -1,20 +1,30 @@
 package com.github.georgespalding.adventofcode;
 
 import static java.lang.Integer.compare;
+import static java.lang.Math.abs;
+import static java.lang.System.out;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingDouble;
 import static java.util.Comparator.comparingInt;
+import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DaySix {
@@ -32,59 +42,98 @@ public class DaySix {
             (a, b) -> a,
             () -> new EnumMap<>(Direction.class)));
 
-      System.out.println("Extremes: " + extremes);
-      final Set<Point> remainingPoints = new HashSet<>(Arrays.asList(points));
+      out.println("Extremes: " + extremes);
+      final Set<Point> remainingPoints = new HashSet<>(asList(points));
       final Set<Point> edgePoints = new HashSet<>();
 
       for (Direction d : Direction.values()) {
          Point current = d.closest(remainingPoints.stream());
          Optional<Point> next;
          do {
-            System.out.println(d + ": " + current);
+            out.println(d + ": " + current);
             edgePoints.add(current);
             next = d.findNextClockWise(current, remainingPoints);
             if (next.isPresent()) {
-               System.out.println("k: " + current.coefficient(next.get()));
+               out.println("k: " + current.coefficient(next.get()));
+               final boolean sameRowOrColumn=current.getX()==next.get().getX()||current.getY()==next.get().getY();
                current = next.get();
+               if(sameRowOrColumn){
+                  edgePoints.add(current);
+                  next= empty();
+               }
             }
          } while (next.isPresent());
       }
       remainingPoints.removeAll(edgePoints);
 
-      System.out.println("Edges:    " + edgePoints);
-      System.out.println("Internal: " + remainingPoints);
+      out.println("Edges:    " + edgePoints);
+      out.println("Internal: " + remainingPoints);
       plotPoints(
          new Point(
             extremes.get(Direction.LEFT).getX(),
-            extremes.get(Direction.DOWN).getY()),
+            extremes.get(Direction.DOWN).getY(),
+            "LOWER_LEFT"),
          new Point(
             extremes.get(Direction.RIGHT).getX(),
-            extremes.get(Direction.UP).getY()),
+            extremes.get(Direction.UP).getY(),
+            "UPPER_RIGHT"),
          edgePoints,
-         remainingPoints);
+         remainingPoints,
+         asList(points));
+      out.println(remainingPoints.size());
+      out.println("======================");
    }
 
    private static void plotPoints(
       Point LOWERLEFT,
       Point UPPERRIGHT,
       Set<Point> edges,
-      Set<Point> internal
+      Set<Point> internal,
+      Collection<Point> all
    ) {
-      for (int y = UPPERRIGHT.getY() + 1; y >= LOWERLEFT.getY() - 1; y--) {
-         System.out.printf("%3s: %s-%s", y, LOWERLEFT.getX(), UPPERRIGHT.getX());
-         for (int x = LOWERLEFT.getX() - 1; x < UPPERRIGHT.getX() + 1; x++) {
-            final Point curr = new Point(x, y);
-
+      Map<Point, List<Point>> closestPointsForPoint = new HashMap<>();
+//      for (int y = UPPERRIGHT.getY(); y >= LOWERLEFT.getY(); y--) {
+      for (int y = LOWERLEFT.getY(); y <= UPPERRIGHT.getY(); y++) {
+         out.printf("%3s: %s-%s: |", y, LOWERLEFT.getX(), UPPERRIGHT.getX());
+         for (int x = LOWERLEFT.getX(); x <= UPPERRIGHT.getX(); x++) {
+            final Point curr = new Point(x, y," ");
             if (edges.contains(curr)) {
-               System.out.print("*");
+               out.print("x");
             } else if (internal.contains(curr)) {
-               System.out.print(".");
+               closestPointsForPoint.computeIfAbsent(curr, c -> new ArrayList<>())
+                  .add(curr);
+               out.print("+");
             } else {
-               System.out.print(" ");
+               final int minDist = all.stream()
+                  .mapToInt(curr::manhattanDistance)
+                  .min()
+                  .orElse(-1);
+               final List<Point> closest = all.stream()
+                  .filter(p -> minDist == curr.manhattanDistance(p))
+                  .collect(Collectors.toList());
+               switch (closest.size()) {
+                  case 0:
+                     throw new RuntimeException("Oops");
+                  case 1:
+                     final Point clos = closest.get(0);
+                     closestPointsForPoint.computeIfAbsent(clos, c -> new ArrayList<>())
+                        .add(new Point(x,y,clos.id.toLowerCase()));
+                     out.print(clos.id);
+                     break;
+                  default:
+                     //Collision
+                     out.print("*");
+               }
             }
          }
-         System.out.println("|");
+         out.println("|");
       }
+      out.println();
+      final ToIntFunction<Pair<Point, Integer>> getVal = Pair::getVal;
+      internal.stream()
+         .map(p -> Pair.fromEntry(p, closestPointsForPoint.getOrDefault(p, emptyList()).size()))
+         .sorted(comparingInt(getVal).reversed())
+         .forEach(out::println);
    }
 
    enum Direction {
@@ -97,7 +146,10 @@ public class DaySix {
       RIGHT(Point::getX, false) {
          public Stream<Point> findNextClockWise(Point current, Stream<Point> remaining) {
             // Vi är längst till höger, kolla neråt
-            return remaining.filter(p -> current.getY() >= p.getY());
+            return remaining
+               .filter(p -> current.getY() >= p.getY())
+               .filter(p -> current.getX() >= p.getY())
+               ;
          }
       },
       DOWN(Point::getY, true) {
@@ -148,15 +200,19 @@ public class DaySix {
 
       final int x;
       final int y;
+      final String id;
 
-      Point(int x, int y) {
+      Point(int x, int y, String id) {
          this.x = x;
          this.y = y;
+         this.id=id;
       }
 
+      static int ID=0;
+      static final String ids="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
       static Point parse(String line) {
          LineParser p = new LineParser(line);
-         return new Point(p.nextInt(','), p.nextInt('<'));
+         return new Point(p.nextInt(','), p.nextInt('<'), ids.substring(ID++,ID));
       }
 
       int getX() {
@@ -173,9 +229,7 @@ public class DaySix {
          int yDiff = other.y - y;
          return xDiff != 0
             ? yDiff / (double) xDiff
-            : yDiff > 0
-               ? Double.POSITIVE_INFINITY
-               : Double.NEGATIVE_INFINITY;
+            : Double.POSITIVE_INFINITY;
       }
 
       @Override
@@ -198,7 +252,7 @@ public class DaySix {
 
       @Override
       public String toString() {
-         return String.format("{ %3s, %3s}", x, y);
+         return String.format("%s:{ %3s, %3s}",id, x, y);
       }
 
       @Override
@@ -207,6 +261,10 @@ public class DaySix {
          return xc != 0
             ? xc
             : compare(y, o.y);
+      }
+
+      public int manhattanDistance(Point other) {
+         return abs(x - other.x) + abs(y - other.y);
       }
    }
 }
