@@ -1,5 +1,6 @@
 package com.github.georgespalding.adventofcode;
 
+import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
 import static java.lang.System.err;
 import static java.util.stream.Collectors.groupingBy;
@@ -40,6 +41,8 @@ public class DaySeven {
    }
 
    public static void main(String[] args) {
+      final long load = currentTimeMillis();
+
       Map<String, Node> index = new HashMap<>();
       rawDag.forEach((nn, dss) -> {
          final Node node = index.computeIfAbsent(nn, Node::new);
@@ -49,6 +52,8 @@ public class DaySeven {
             dNode.getUpStream().add(node);
          });
       });
+
+      final long start = currentTimeMillis();
 
       final List<Node> remaining = index.values().stream().sorted().collect(toList());
       final List<Node> done = new ArrayList<>();
@@ -85,12 +90,16 @@ public class DaySeven {
             }
          }
       } while (!remaining.isEmpty());
+      final long mid = currentTimeMillis();
+      final long end = currentTimeMillis();
 
       final int finishTime=workers.stream().mapToInt(Worker::getAvailableAfter).max().getAsInt();
       clock.advanceTo(finishTime, workers, done);
 
-      out.println(done.stream().map(Node::getName).collect(joining()));
-      out.println("Took: " + finishTime + "s");
+      out.printf("Load: (%d ms)\n", start - load);
+      out.printf("Ans1: %s (%d ms)\n", done.stream().map(Node::getName).collect(joining()), mid - start);
+      out.printf("Ans2: Takes %s s to complete (%d ms)\n", finishTime, end - mid);
+      out.printf("Total (%d ms)\n", end - start);
    }
 
    private static class Clock {
@@ -111,7 +120,7 @@ public class DaySeven {
       }
 
       private void renderTick(int sec, List<Worker> workers, List<Node> done) {
-         out.println(String.format("   %3d        ",sec)
+         if(debug)out.println(String.format("   %3d        ",sec)
             + workers.stream().map(worker -> worker.currentTask).collect(joining("        ")) + "   "
             + done.stream().map(n -> n.name).collect(toList()));
       }
