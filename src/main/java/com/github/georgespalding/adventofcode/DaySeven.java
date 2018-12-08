@@ -1,6 +1,7 @@
 package com.github.georgespalding.adventofcode;
 
 import static java.lang.System.out;
+import static java.lang.System.err;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -15,13 +16,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 public class DaySeven {
 
    private static final Map<String, List<String>> rawDag =
-      Util.streamResource("7-s.lst")
+      Util.streamResource("7.lst")
          .map(DaySeven::parse)
          .collect(groupingBy(s -> s.substring(0, 1)))
       .entrySet().stream()
@@ -31,7 +33,7 @@ public class DaySeven {
                .map(s -> s.substring(1, 2))
                .sorted()
                .collect(toList())));
-
+   static final boolean debug=false;
    private static String parse(String line) {
       //Step E must be finished before step B can begin.
       return new String(new char[] { line.charAt(5), line.charAt(36) });
@@ -51,7 +53,7 @@ public class DaySeven {
       final List<Node> remaining = index.values().stream().sorted().collect(toList());
       final List<Node> done = new ArrayList<>();
       final Clock clock = new Clock();
-      final List<Worker> workers = range(0, 2)
+      final List<Worker> workers = range(0, 5)
          .mapToObj(i -> new Worker(i, clock))
          .collect(toList());
 
@@ -60,34 +62,35 @@ public class DaySeven {
       // 1.b no more unblocked nodes exist
       // 2. Advance time until the first busy worker is done, processing any scheduled events
       do {// While work remains
-         unblocked(done, remaining)
-            .findFirst()
+         final Optional<Node> nextUnblocked = unblocked(done, remaining)
+            .findFirst();
+         nextUnblocked
             .ifPresent(unblocked -> {// Found free node
                remaining.remove(unblocked);
                // if worker available
                Worker nextAvailable = workers.stream().min(Comparator.comparingInt(Worker::getAvailableAfter)).get();
                if (!nextAvailable.idle()) {
-                  clock.advanceTo(nextAvailable.availableAfter);
+                  clock.advanceTo(nextAvailable.availableAfter, workers, done);
                }
                nextAvailable.accept(unblocked, () -> done.add(unblocked));
-               renderTick(clock, workers, done);
             });
-         final OptionalInt tick = workers.stream()
-            .filter(Worker::busy)
-            .mapToInt(Worker::getAvailableAfter)
-            .min();
-         if (tick.isPresent()) {
-            clock.advanceTo(tick.getAsInt());
+         if(nextUnblocked.isEmpty()) {
+            // There is nothing to do.
+            final OptionalInt tick = workers.stream()
+               .filter(Worker::busy)
+               .mapToInt(Worker::getAvailableAfter)
+               .min();
+            if (tick.isPresent()) {
+               clock.advanceTo(tick.getAsInt(), workers, done);
+            }
          }
       } while (!remaining.isEmpty());
-      out.println(done.stream().map(Node::getName).collect(joining()));
-      out.println("Took: " + workers.stream().mapToInt(Worker::getAvailableAfter).max() + "s");
-   }
 
-   private static void renderTick(Clock clock, List<Worker> workers, List<Node> done) {
-      out.println(clock.get() + "   "
-         + workers.stream().map(worker -> worker.currentTask).collect(joining("   ")) + "   "
-         + done.stream().map(n -> n.name).collect(toList()));
+      final int finishTime=workers.stream().mapToInt(Worker::getAvailableAfter).max().getAsInt();
+      clock.advanceTo(finishTime, workers, done);
+
+      out.println(done.stream().map(Node::getName).collect(joining()));
+      out.println("Took: " + finishTime + "s");
    }
 
    private static class Clock {
@@ -95,15 +98,22 @@ public class DaySeven {
       LinkedList<Pair<Integer, Runnable>> events = new LinkedList<>();
       int time;
 
-      void advanceTo(int time) {
+      void advanceTo(int time, List<Worker> workers, List<Node> done) {
+         range(this.time, time).forEach(t -> renderTick(t, workers, done));
          this.time = time;
-         out.println(time + "s - Tock");
+         if(debug)err.println(time + "s - Tock");
          events.sort(Comparator.comparingInt(Pair::getKey));
          while (!events.isEmpty() && events.getFirst().getKey() <= time) {
             final Pair<Integer, Runnable> task = events.removeFirst();
             task.getVal().run();
-            //out.println(task.getKey() +"-"+time+"s - Ran task");
+            if(debug)err.println(task.getKey() +"-"+time+"s - Ran task");
          }
+      }
+
+      private void renderTick(int sec, List<Worker> workers, List<Node> done) {
+         out.println(String.format("   %3d        ",sec)
+            + workers.stream().map(worker -> worker.currentTask).collect(joining("        ")) + "   "
+            + done.stream().map(n -> n.name).collect(toList()));
       }
 
       void event(int when, Runnable task) {
@@ -145,11 +155,11 @@ public class DaySeven {
          assert idle() : "accepted job while busy";
          availableAfter = clock.get() + job.executionTime();
          currentTask = job.name;
-         out.println(clock.get() + "s - worker#" + id + " accept job " + job.name + " (" + job.executionTime() + ") available from " + availableAfter);
+         if(debug) err.println(clock.get() + "s - worker#" + id + " accept job " + job.name + " (" + job.executionTime() + ") available from " + availableAfter);
          clock.event(availableAfter, () -> {
             currentTask = ".";
             post.run();
-            out.println(clock.get() + "s - worker#" + id + " completed job " + job.name);
+            if(debug)err.println(clock.get() + "s - worker#" + id + " completed job " + job.name);
          });
       }
 
@@ -189,7 +199,7 @@ public class DaySeven {
       }
 
       int executionTime() {
-         return //60+
+         return 60+
             1 + name.toCharArray()[0] - 'A';
       }
 
