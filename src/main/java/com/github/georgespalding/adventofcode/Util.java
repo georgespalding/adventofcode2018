@@ -9,11 +9,11 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class Util {
-   static URI getResource(String resourceName) throws URISyntaxException {
+   public static URI getResource(String resourceName) throws URISyntaxException {
       return Objects.requireNonNull(DayOne.class.getClassLoader().getResource(resourceName)).toURI();
    }
 
-   static Stream<String> streamResource(String resourceName){
+   public static Stream<String> streamResource(String resourceName){
       try {
          return lines(Paths.get(getResource(resourceName)));
       } catch (Exception e) {
