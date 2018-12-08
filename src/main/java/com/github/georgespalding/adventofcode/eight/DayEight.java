@@ -33,7 +33,7 @@ public class DayEight {
          final long start = currentTimeMillis();
          long ans1 = root.accept(new MetadataSumVisitor()).sum;
          final long mid = currentTimeMillis();
-         Object ans2 = null;
+         int ans2 = root.sum();
          final long end = currentTimeMillis();
 
          out.printf("Load: (%d ms)\n", start - load);
@@ -112,6 +112,27 @@ public class DayEight {
             concat(
                childNodes.stream().flatMapToInt(Node::serialize),
                metadataEntries.stream().mapToInt(md -> md)));
+      }
+
+      int sum() {
+         if (childNodes.isEmpty()) {
+            // If a node has no child nodes, its value is the sum of its metadata entries.
+            // So, the value of node B is 10+11+12=33, and the value of node D is 99.
+            return metadataEntries.stream().mapToInt(i -> i).sum();
+         } else {
+            // If a node does have child nodes, the metadata entries become indexes which refer to those child nodes.
+            return metadataEntries.stream()
+               // A metadata entry of 1 refers to the first child node, 2 to the second, 3 to the third, and so on.
+               .map(i -> i - 1)
+               // If a referenced child node does not exist, that reference is skipped.
+               // A metadata entry of 0 does not refer to any child node.
+               .filter(i -> 0 <= i && i < childNodes.size())
+               // A child node can be referenced multiple time and counts each time it is referenced.
+               .map(childNodes::get)
+               .mapToInt(Node::sum)
+               // The value of this node is the sum of the values of the child nodes referenced by the metadata entries.
+               .sum();
+         }
       }
 
       @Override
