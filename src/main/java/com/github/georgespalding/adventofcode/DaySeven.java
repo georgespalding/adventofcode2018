@@ -10,11 +10,12 @@ import static java.util.stream.IntStream.range;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 public class DaySeven {
@@ -46,37 +47,72 @@ public class DaySeven {
             dNode.getUpStream().add(node);
          });
       });
-      {
-         {
 
-            // Allocate work
-         }
-         // Advance time until first worker becomes free
-      }
       final List<Node> remaining = index.values().stream().sorted().collect(toList());
       final List<Node> done = new ArrayList<>();
+      final Clock clock = new Clock();
       final List<Worker> workers = range(0, 2)
-         .mapToObj(Worker::new)
+         .mapToObj(i -> new Worker(i, clock))
          .collect(toList());
-      AtomicInteger clock = new AtomicInteger();
+
+      // 1. While workers are idle, search for unblocked nodes until
+      // 1.a no more workers available
+      // 1.b no more unblocked nodes exist
+      // 2. Advance time until the first busy worker is done, processing any scheduled events
       do {// While work remains
-         final List<Node> unbloked = unblocked(done, remaining).collect(toList());
-            unbloked.forEach(firstUnBlocked -> {// Find free node
-               done.add(firstUnBlocked);
-               remaining.remove(firstUnBlocked);
+         unblocked(done, remaining)
+            .findFirst()
+            .ifPresent(unblocked -> {// Found free node
+               remaining.remove(unblocked);
                // if worker available
                Worker nextAvailable = workers.stream().min(Comparator.comparingInt(Worker::getAvailableAfter)).get();
-               if (!nextAvailable.idle(clock.get())) {
-                  clock.set(nextAvailable.availableAfter);
+               if (!nextAvailable.idle()) {
+                  clock.advanceTo(nextAvailable.availableAfter);
                }
-               nextAvailable.accept(firstUnBlocked, clock.get());
+               nextAvailable.accept(unblocked, () -> done.add(unblocked));
+               renderTick(clock, workers, done);
             });
-         clock.set(workers.stream().filter(w->w.busy(clock.get())).mapToInt(Worker::getAvailableAfter).min().getAsInt());
-
+         final OptionalInt tick = workers.stream()
+            .filter(Worker::busy)
+            .mapToInt(Worker::getAvailableAfter)
+            .min();
+         if (tick.isPresent()) {
+            clock.advanceTo(tick.getAsInt());
+         }
       } while (!remaining.isEmpty());
-      out.println(done);
       out.println(done.stream().map(Node::getName).collect(joining()));
       out.println("Took: " + workers.stream().mapToInt(Worker::getAvailableAfter).max() + "s");
+   }
+
+   private static void renderTick(Clock clock, List<Worker> workers, List<Node> done) {
+      out.println(clock.get() + "   "
+         + workers.stream().map(worker -> worker.currentTask).collect(joining("   ")) + "   "
+         + done.stream().map(n -> n.name).collect(toList()));
+   }
+
+   private static class Clock {
+
+      LinkedList<Pair<Integer, Runnable>> events = new LinkedList<>();
+      int time;
+
+      void advanceTo(int time) {
+         this.time = time;
+         out.println(time + "s - Tock");
+         events.sort(Comparator.comparingInt(Pair::getKey));
+         while (!events.isEmpty() && events.getFirst().getKey() <= time) {
+            final Pair<Integer, Runnable> task = events.removeFirst();
+            task.getVal().run();
+            //out.println(task.getKey() +"-"+time+"s - Ran task");
+         }
+      }
+
+      void event(int when, Runnable task) {
+         events.add(Pair.fromEntry(when, task));
+      }
+
+      int get() {
+         return time;
+      }
    }
 
    private static Stream<Node> unblocked(List<Node> done, List<Node> remaining) {
@@ -88,23 +124,33 @@ public class DaySeven {
    static class Worker {
 
       final int id;
+      final Clock clock;
       int availableAfter;
+      String currentTask = ".";
 
-      Worker(int id) {
+      Worker(int id, Clock clock) {
          this.id = id;
+         this.clock = clock;
       }
 
-      boolean idle(int now) {
-         return now >= availableAfter;
+      boolean idle() {
+         return clock.get() >= availableAfter;
       }
 
-      boolean busy(int now){
-         return !idle(now);
+      boolean busy() {
+         return !idle();
       }
-      void accept(Node job, int now) {
-         assert idle(now) : "accepted job while busy";
-         availableAfter = now + job.executionTime();
-         out.println(id + ": " + now + " accept job " + job.name + " (" + job.executionTime() + ") available again at " + availableAfter);
+
+      void accept(Node job, Runnable post) {
+         assert idle() : "accepted job while busy";
+         availableAfter = clock.get() + job.executionTime();
+         currentTask = job.name;
+         out.println(clock.get() + "s - worker#" + id + " accept job " + job.name + " (" + job.executionTime() + ") available from " + availableAfter);
+         clock.event(availableAfter, () -> {
+            currentTask = ".";
+            post.run();
+            out.println(clock.get() + "s - worker#" + id + " completed job " + job.name);
+         });
       }
 
       public int getId() {
@@ -144,7 +190,7 @@ public class DaySeven {
 
       int executionTime() {
          return //60+
-            1 +name.toCharArray()[0] - 'A';
+            1 + name.toCharArray()[0] - 'A';
       }
 
       @Override
