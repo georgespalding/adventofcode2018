@@ -8,14 +8,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-class LineParser {
+public class LineParser {
 
    final String line;
    int pos = 0;
 
-   LineParser(String line) {this.line = line;}
+   public LineParser(String line) {this.line = line;}
 
-   String next(char delim) {
+   public String next(char delim) {
       int delimPos = line.indexOf(delim, pos);
       if (delimPos == -1) {
          delimPos = line.length();
@@ -27,7 +27,7 @@ class LineParser {
       }
    }
 
-   int nextInt(char delim) {
+   public int nextInt(char delim) {
       return Integer.parseInt(next(delim));
    }
 
