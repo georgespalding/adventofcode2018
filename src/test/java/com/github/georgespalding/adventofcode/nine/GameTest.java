@@ -3,21 +3,13 @@ package com.github.georgespalding.adventofcode.nine;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-import java.util.Optional;
+import java.util.OptionalLong;
 
 public class GameTest {
 
    @Test
-   public void testExamples() {
-      final Game game = new Game(9);
-      final Optional<Player> winner = game.getWinnerAtMarble(25);
-      Assertions.assertThat(winner).isPresent();
-      Assertions.assertThat(winner.get().winnings()).isEqualTo(32);
-      Assertions.assertThat(winner.get().id).isEqualTo(5);
-   }
-
-   @Test
    public void testGames() {
+      testGame(9, 25, 32);
       testGame(10, 1618, 8317);
       testGame(13, 7999, 146373);
       testGame(17, 1104, 2764);
@@ -27,9 +19,8 @@ public class GameTest {
 
    public void testGame(int players, int lastMarble, int expectedWinningScore) {
       final Game game = new Game(players);
-      final Optional<Player> winner = game.getWinnerAtMarble(lastMarble);
-      Assertions.assertThat(winner).isPresent();
-      Assertions.assertThat(winner.get().winnings()).isEqualTo(expectedWinningScore);
-      //Assertions.assertThat(winner.get().id).isEqualTo(5);
+      final OptionalLong winningScore = game.getWinnerAtMarble(lastMarble);
+      Assertions.assertThat(winningScore).isPresent();
+      Assertions.assertThat(winningScore.getAsLong()).isEqualTo(expectedWinningScore);
    }
 }

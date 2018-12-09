@@ -11,9 +11,9 @@ public class DayNine {
       final long load = currentTimeMillis();
       final Game game=new Game(427);
       final long start = currentTimeMillis();
-      final long ans1= game.getWinnerAtMarble(70723).get().winnings();
+      final long ans1= game.getWinnerAtMarble(70723).getAsLong();
       final long mid = currentTimeMillis();
-      final Player ans2 = game.getWinnerAtMarble(99 * 70723).get();
+      final long ans2 = game.getWinnerAtMarble(99 * 70723).getAsLong();
       final long end = currentTimeMillis();
 
       out.printf("Load: (%d ms)\n", start - load);
