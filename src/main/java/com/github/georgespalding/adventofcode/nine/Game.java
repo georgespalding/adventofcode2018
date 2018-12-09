@@ -2,13 +2,13 @@ package com.github.georgespalding.adventofcode.nine;
 
 import static java.lang.System.out;
 import static java.util.Arrays.stream;
-import static java.util.Comparator.comparingInt;
-import static java.util.OptionalInt.empty;
-import static java.util.OptionalInt.of;
+import static java.util.Comparator.comparingLong;
+import static java.util.OptionalLong.empty;
+import static java.util.OptionalLong.of;
 import static java.util.stream.IntStream.rangeClosed;
 
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 public class Game {
 
@@ -34,14 +34,14 @@ public class Game {
          }
       });
 
-      return stream(players).max(comparingInt(Player::winnings));
+      return stream(players).max(comparingLong(Player::winnings));
    }
 
    private Player currentPlayer() {
       return players[(round-1) % players.length];
    }
 
-   private OptionalInt makeMove() {
+   private OptionalLong makeMove() {
       if (round % 23 == 0) {
          for (int i = 0; i < 7; i++) {
             ring.previous();

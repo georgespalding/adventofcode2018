@@ -4,11 +4,11 @@ import static java.lang.String.format;
 
 class Ring<T> {
 
-   private Member head;
-   private Member current;
+   private Member<T> head;
+   private Member<T> current;
 
    void add(T value) {
-      final Member newCurrent = new Member(value);
+      final Member<T> newCurrent = new Member<>(value);
       if (current == null) {
          newCurrent.previous = newCurrent;
          newCurrent.next = newCurrent;
@@ -28,11 +28,42 @@ class Ring<T> {
    }
 
    T remove() {
-      final Member remove = current;
+      final Member<T> remove = current;
       current = remove.next;
       remove.remove();
 
       return remove.value;
+   }
+
+   T removeFreeMem() {
+      final Member<T> remove = current;
+      current = remove.next;
+      remove.remove();
+      if (head!=null && stepsForwardToHead() > 46) {
+         current.previous = null;
+         head.previous = null;
+         head = null;
+      }
+      if(head==null){
+         current.previous=null;
+      }
+
+      //      remove.previous.next=nul;
+      //      remove.next=null;
+      //      remove.previous=null;
+
+      return remove.value;
+   }
+
+   private int stepsForwardToHead() {
+      Member here = current;
+      int dist = 0;
+      while (here != head) {
+         dist++;
+         here = here.next;
+      }
+      System.out.println("stepsForwardToHead:" + dist);
+      return dist;
    }
 
    @Override
@@ -46,15 +77,15 @@ class Ring<T> {
       return sb.toString();
    }
 
-   private class Member {
+   private static class Member<T> {
 
-      private final T value;
-      Member next;
-      Member previous;
+      final T value;
+      Member<T> next;
+      Member<T> previous;
 
-      private Member(T value) {this.value = value;}
+      Member(T value) {this.value = value;}
 
-      private void insert(Member previous, Member next) {
+      void insert(Member<T> previous, Member<T> next) {
          this.next = next;
          this.next.previous = this;
          this.previous = previous;

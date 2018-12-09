@@ -3,11 +3,11 @@ package com.github.georgespalding.adventofcode.nine;
 public class Player {
 
    final int id ;
-   private int winnings;
+   private long winnings;
 
    public Player(int id) {this.id = id;}
 
-   int winnings() {
+   long winnings() {
       return winnings;
    }
 
@@ -16,7 +16,7 @@ public class Player {
       return "Player#" + id + ": " + winnings();
    }
 
-   public void addWinnings(int winnings) {
+   public void addWinnings(long winnings) {
       this.winnings += winnings;
    }
 }
