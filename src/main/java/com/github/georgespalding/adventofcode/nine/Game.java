@@ -44,11 +44,15 @@ public class Game {
    private OptionalLong makeMove() {
       if (round % 23 == 0) {
          for (int i = 0; i < 7; i++) {
-            ring.previous();
+            if (ring.previous()) {
+               out.println("Backed up to head at move " + round + " ring size:" + ring.size());
+            }
          }
          return of(round + ring.remove());
       } else {
-         ring.next();
+         if (ring.next()) {
+            out.println("Passed head at move " + round + " ring size:" + ring.size());
+         }
          ring.add(round);
          return empty();
       }

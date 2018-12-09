@@ -2,13 +2,10 @@ package com.github.georgespalding.adventofcode.nine;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
-import static java.util.Comparator.comparingInt;
-
-import java.util.Comparator;
 
 public class DayNine {
 
-    static final boolean debug = false;
+   static final boolean debug = false;
 
    public static void main(String[] args) {
       final long load = currentTimeMillis();
