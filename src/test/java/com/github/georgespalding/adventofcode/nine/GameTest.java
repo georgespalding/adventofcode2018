@@ -12,7 +12,7 @@ public class GameTest {
       final Game game = new Game(9);
       final Optional<Player> winner = game.getWinnerAtMarble(25);
       Assertions.assertThat(winner).isPresent();
-      Assertions.assertThat(winner.get().score()).isEqualTo(32);
+      Assertions.assertThat(winner.get().winnings()).isEqualTo(32);
       Assertions.assertThat(winner.get().id).isEqualTo(5);
    }
 
@@ -29,7 +29,7 @@ public class GameTest {
       final Game game = new Game(players);
       final Optional<Player> winner = game.getWinnerAtMarble(lastMarble);
       Assertions.assertThat(winner).isPresent();
-      Assertions.assertThat(winner.get().score()).isEqualTo(expectedWinningScore);
+      Assertions.assertThat(winner.get().winnings()).isEqualTo(expectedWinningScore);
       //Assertions.assertThat(winner.get().id).isEqualTo(5);
    }
 }
