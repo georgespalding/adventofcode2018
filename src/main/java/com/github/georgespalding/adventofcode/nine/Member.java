@@ -1,14 +1,14 @@
 package com.github.georgespalding.adventofcode.nine;
 
-class Member<T> {
+class Member {
 
-   T value;
-   Member<T> next;
-   Member<T> previous;
+   final int value;
+   Member next;
+   Member previous;
 
-   Member(T value) {this.value = value;}
+   Member(int value) {this.value = value;}
 
-   void insert(Member<T> previous, Member<T> next) {
+   void insert(Member previous, Member next) {
       this.next = next;
       this.next.previous = this;
       this.previous = previous;
@@ -18,10 +18,6 @@ class Member<T> {
    void remove() {
       this.next.previous = this.previous;
       this.previous.next = this.next;
-      free();
    }
 
-   private void free() {
-
-   }
 }

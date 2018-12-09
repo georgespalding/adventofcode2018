@@ -18,7 +18,7 @@ public class GameTest {
    }
 
    public void testGame(int players, int lastMarble, int expectedWinningScore) {
-      final Game game = new Game(players);
+      final Game game = new Game(players, lastMarble);
       final OptionalLong winningScore = game.getWinnerAtMarble(lastMarble);
       Assertions.assertThat(winningScore).isPresent();
       Assertions.assertThat(winningScore.getAsLong()).isEqualTo(expectedWinningScore);

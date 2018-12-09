@@ -2,14 +2,16 @@ package com.github.georgespalding.adventofcode.nine;
 
 import static java.lang.String.format;
 
-class Ring<T> {
+class Ring {
 
-   private Member<T> head;
-   private Member<T> current;
-   private int size;
+   private final MemberFactory factory;
+   private Member head;
+   private Member current;
 
-   void add(T value) {
-      final Member<T> newCurrent = new Member<>(value);
+   Ring(int finalSize) {this.factory = new MemberFactory(finalSize);}
+
+   void add(int value) {
+      final Member newCurrent = factory.create(value);
       if (current == null) {
          newCurrent.previous = newCurrent;
          newCurrent.next = newCurrent;
@@ -18,29 +20,22 @@ class Ring<T> {
          newCurrent.insert(current, current.next);
       }
       current = newCurrent;
-      size++;
    }
 
-   boolean next() {
+   void next() {
       current = current.next;
-      return current == head;
    }
 
-   boolean previous() {
+   void previous() {
       current = current.previous;
-      return current == head;
    }
 
-   T remove() {
-      final Member<T> remove = current;
+   int remove() {
+      final Member remove = current;
       current = remove.next;
       remove.remove();
 
       return remove.value;
-   }
-
-   public int size() {
-      return size;
    }
 
    @Override
