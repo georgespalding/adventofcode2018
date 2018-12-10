@@ -13,11 +13,11 @@ public class Pair<K, V> {
       this.val = val;
    }
 
-   static <K, V> Pair<K, V> fromEntry(K key, V val) {
+   public static <K, V> Pair<K, V> fromEntry(K key, V val) {
       return new Pair<>(key, val);
    }
 
-   static <K, V> Pair<K, V> fromEntry(Entry<K, V> entry) {
+   public static <K, V> Pair<K, V> fromEntry(Entry<K, V> entry) {
       return new Pair<>(entry.getKey(), entry.getValue());
    }
 
