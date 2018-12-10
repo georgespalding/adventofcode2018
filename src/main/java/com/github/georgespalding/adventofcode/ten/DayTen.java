@@ -58,7 +58,7 @@ public class DayTen {
          sb.append('\n');
       }
       dayNine.partOne(sb.toString());
-      dayNine.partTwo("TODO Part2");
+      dayNine.partTwo(t);
 
       dayNine.output();
    }
