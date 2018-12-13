@@ -5,7 +5,6 @@ import static java.util.stream.IntStream.range;
 
 import com.github.georgespalding.adventofcode.LineParser;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -143,48 +142,14 @@ public class BinaryThing {
    BigInteger hyperJumpAt100() {
       final BigInteger fiveBill = valueOf(50_000_000_000L);
       BigInteger remainingSteps = fiveBill.subtract(valueOf(100));
-      final int indexOfFirstPlant = IntStream.range(0, state.length)
-         .filter(i -> state[i])
-         .findFirst()
-         .getAsInt();
-      final int potNumberOfFirstPlant = indexOfFirstPlant - indexOfPotZero;
-
       final long plantCount = range(0, state.length)
          .filter(i -> state[i])
          .count();
 
       long valAt100 = potNumSum();
-      long potSumDiff = plantCount;
-
-      generation();
-
-      long valAt101 = potNumSum();
-      long potSumDiff2 = valAt101 - valAt100;
-
-      generation();
-
-      long valAt102 = potNumSum();
-      long potSumDiff3 = valAt102 - valAt101;
-      System.out.println("plantcount: "+plantCount+" = "+ potSumDiff);
-      System.out.println(potSumDiff + "==" + potSumDiff2 + "==" + potSumDiff3);
-
-      final BigInteger res3 =
-         valueOf(valAt100)
+      return valueOf(valAt100)
          .add(valueOf(plantCount)
             .multiply(remainingSteps));
-      final BigInteger res1 =
-         valueOf(plantCount)
-            .multiply(remainingSteps)
-         .add(valueOf(valAt100));
-      final BigInteger res2 = ((valueOf(potNumberOfFirstPlant)
-                                   .add(remainingSteps))
-                                  .multiply(valueOf(plantCount)))
-         .add(valueOf(valAt100));
-      System.out.println(res1);
-      System.out.println(res2);
-      System.out.println(res3);
-      System.out.println(valueOf(6175).add(remainingSteps.multiply(valueOf(50))));//6175+(50 000 000 000-100)*50
-      return res2;
    }
 
 }

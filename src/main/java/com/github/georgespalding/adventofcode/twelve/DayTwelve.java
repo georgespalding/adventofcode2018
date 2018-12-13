@@ -14,7 +14,7 @@ import java.util.stream.LongStream;
 
 public class DayTwelve {
 
-   static final boolean debug = true;
+   static final boolean debug = false;
 
    public static void main(String[] args) {
       final Day<Long, BigInteger> dayTwelve = new Day<>();
