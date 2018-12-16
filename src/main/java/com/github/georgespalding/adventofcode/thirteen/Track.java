@@ -6,7 +6,6 @@ abstract class Track {
 
    private final Point pos;
    private MineCart cart;
-   private MineCart violator;
 
    Track(Point pos, MineCart mineCart) {
       this.pos = pos;
@@ -20,7 +19,9 @@ abstract class Track {
       align(cart);
       if (this.cart != null) {
          System.out.println("BOOM!!!");
-         violator = cart;
+         this.cart.crashed(cart);
+         cart.crashed(this.cart);
+         this.cart = null;
          return false;
       } else {
          this.cart = cart;

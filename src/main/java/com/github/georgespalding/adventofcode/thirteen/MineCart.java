@@ -1,10 +1,14 @@
 package com.github.georgespalding.adventofcode.thirteen;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class MineCart implements Comparable<MineCart> {
 
    private Direction direction;
    private Track track;
    private int turns;
+   private List<MineCart> crashed = new ArrayList<>();
 
    MineCart(Direction direction) {this.direction = direction;}
 
@@ -13,6 +17,9 @@ class MineCart implements Comparable<MineCart> {
    }
 
    boolean doTick() {
+      if(isCrashed()){
+         return false;
+      }
       track = track.doTick();
       return track.accept(this);
    }
@@ -23,6 +30,10 @@ class MineCart implements Comparable<MineCart> {
 
    void setDirection(Direction direction) {
       this.direction = direction;
+   }
+
+   boolean isCrashed() {
+      return !crashed.isEmpty();
    }
 
    /**
@@ -64,5 +75,9 @@ class MineCart implements Comparable<MineCart> {
 
    Object getPos() {
       return track.getPos();
+   }
+
+   public void crashed(MineCart cart) {
+      this.crashed.add(cart);
    }
 }
