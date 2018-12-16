@@ -10,11 +10,11 @@ public class DayFourteen {
    private static final boolean debug = false;
    private static final int limit = 825401;
    private static final int[] search = new int[] { 8, 2, 5, 4, 0, 1 };
-//      private static final int limit = 51589;
-//      private static final int[] search = new int[] { 5, 1, 5, 8, 9 };
-//      private static final int limit = 18;
-//      private static final int[] search = new int[] { 9,2,5,1,0 };
-   private static final int total = (20207075+10);
+   //      private static final int limit = 51589;
+   //      private static final int[] search = new int[] { 5, 1, 5, 8, 9 };
+   //      private static final int limit = 18;
+   //      private static final int[] search = new int[] { 9,2,5,1,0 };
+   private static final int total = (20207075 + 10);
    private static final int[] recipes = new int[total + 2];
 
    public static void main(String[] args) {
@@ -56,21 +56,19 @@ public class DayFourteen {
                dayNine.partTwo(recipeCount - search.length);
             }
          }
+         if (recipeCount == limit+11) {
+            dayNine.partOne(stream(stream(recipes, limit, 10 + limit)
+               .toArray())
+               .boxed()
+               .map(Object::toString)
+               .collect(joining()));
+         }
+
          elf1 = (elf1 + 1 + recipeElf1) % recipeCount;
          elf2 = (elf2 + 1 + recipeElf2) % recipeCount;
       }
 
-      dayNine.partOne(stream(pickTenAfter(limit))
-         .boxed()
-         .map(Object::toString)
-         .collect(joining()));
-
       dayNine.output();
-   }
-
-   private static int[] pickTenAfter(int pos) {
-      return stream(recipes, pos, 10 + pos)
-         .toArray();
    }
 
    private static void printSitu(int elf1, int elf2, int recipeCount) {
