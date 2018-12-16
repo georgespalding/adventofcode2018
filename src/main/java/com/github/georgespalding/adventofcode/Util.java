@@ -9,15 +9,16 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 public class Util {
+
    public static URI getResource(String resourceName) throws URISyntaxException {
       return Objects.requireNonNull(DayOne.class.getClassLoader().getResource(resourceName)).toURI();
    }
 
-   public static Stream<String> streamResource(String resourceName){
+   public static Stream<String> streamResource(String resourceName) {
       try {
          return lines(Paths.get(getResource(resourceName)));
       } catch (Exception e) {
-         throw new RuntimeException("Failed to stream data from '"+resourceName+"':", e);
+         throw new RuntimeException("Failed to stream data from '" + resourceName + "':", e);
       }
    }
 }

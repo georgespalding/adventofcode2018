@@ -55,28 +55,34 @@ class CurvedTrack extends Track {
 
    @Override
    void align(MineCart cart) {
-      //TODO this requires some though.
-
-      if (northSouth.getKey() == cart.getDirection()) {
+      if (northSouth.getKey() == cart.getDirection().opposite()) {
          cart.setDirection(eastWest.getKey());
-      } else if (eastWest.getKey() == cart.getDirection()) {
+      } else if (eastWest.getKey() == cart.getDirection().opposite()) {
          cart.setDirection(northSouth.getKey());
+      } else {
+         throw new IllegalStateException("This cant happen " + cart.desc() + " track " + this);
       }
    }
 
    @Override
    Track next(Direction direction) {
-      return null;
+      if (northSouth.getKey() == direction) {
+         return northSouth.getVal();
+      } else if (eastWest.getKey() == direction) {
+         return eastWest.getVal();
+      } else {
+         throw new IllegalStateException("Shit's fucked, curve with exits: " + northSouth.getKey() + "," + eastWest.getKey());
+      }
    }
 
    @Override
-   public String symbol() {
-      //     _
-      //    /        |
-      //    |       _/
+   public char symbol() {
+      //     _          _
+      //    /        |   \  |
+      //    |       _/   |  \_
       return ((northSouth.getKey() == South && eastWest.getKey() == East)
                  || (northSouth.getKey() == North && eastWest.getKey() == West))
-         ? "/" : "\\";
+         ? '/' : '\\';
    }
 
 }

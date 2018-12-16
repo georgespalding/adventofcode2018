@@ -73,7 +73,7 @@ class StraightTrack extends Track {
    }
 
    @Override
-   public String symbol() {
-      return horizontal ? "-" : "|";
+   public char symbol() {
+      return horizontal ? '-' : '|';
    }
 }

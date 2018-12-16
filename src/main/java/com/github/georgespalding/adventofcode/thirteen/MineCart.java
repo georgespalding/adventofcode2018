@@ -8,26 +8,21 @@ class MineCart implements Comparable<MineCart> {
 
    MineCart(Direction direction) {this.direction = direction;}
 
-   public void setTrack(Track track) {
+   void setTrack(Track track) {
       this.track = track;
    }
 
    boolean doTick() {
-      final Track next = track.leaveAndGetNext();
-      return next.accept(this);
+      track = track.doTick();
+      return track.accept(this);
    }
 
-   public Direction getDirection() {
+   Direction getDirection() {
       return direction;
    }
 
-   public void setDirection(Direction direction) {
+   void setDirection(Direction direction) {
       this.direction = direction;
-   }
-
-   @Override
-   public String toString() {
-      return direction.toString();
    }
 
    /**
@@ -38,7 +33,7 @@ class MineCart implements Comparable<MineCart> {
     * left the fourth time,
     * straight the fifth time, and so on.
     */
-   public void chooseAnyDirection() {
+   void chooseAnyDirection() {
       switch (turns++ % 3) {
          case 0:
             // Turn left
@@ -60,5 +55,14 @@ class MineCart implements Comparable<MineCart> {
 
    String desc() {
       return toString() + " in " + track.desc();
+   }
+
+   @Override
+   public String toString() {
+      return direction.toString();
+   }
+
+   Object getPos() {
+      return track.getPos();
    }
 }

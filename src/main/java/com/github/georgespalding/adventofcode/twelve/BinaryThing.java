@@ -90,7 +90,7 @@ public class BinaryThing {
          .getAsInt();
       final int delta = PADDING - indexOfFirstPlant;
       boolean[] nextState = new boolean[PADDING + indexOfLastPlant + 1 - indexOfFirstPlant + PADDING];
-      for (int i = indexOfFirstPlant - WIDTH; i < indexOfLastPlant + WIDTH+1; i++) {
+      for (int i = indexOfFirstPlant - WIDTH; i < indexOfLastPlant + WIDTH + 1; i++) {
          if (masks[convert(state, i - WIDTH, PADDING)]) {
             nextState[i + delta] = true;
          }

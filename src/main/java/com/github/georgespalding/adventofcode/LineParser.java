@@ -55,6 +55,6 @@ public class LineParser {
          case "Guard":
             return new GuardBeginShift(datestamp, timestamp, nextInt(' '));
       }
-      throw new IllegalArgumentException("Could not parse '"+line+"'");
+      throw new IllegalArgumentException("Could not parse '" + line + "'");
    }
 }

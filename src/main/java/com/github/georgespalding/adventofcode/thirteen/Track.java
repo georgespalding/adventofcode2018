@@ -6,6 +6,7 @@ abstract class Track {
 
    private final Point pos;
    private MineCart cart;
+   private MineCart violator;
 
    Track(Point pos, MineCart mineCart) {
       this.pos = pos;
@@ -16,11 +17,12 @@ abstract class Track {
    }
 
    boolean accept(MineCart cart) {
+      align(cart);
       if (this.cart != null) {
          System.out.println("BOOM!!!");
+         violator = cart;
          return false;
       } else {
-         align(cart);
          this.cart = cart;
          return true;
       }
@@ -54,9 +56,9 @@ abstract class Track {
 
    abstract Track next(Direction direction);
 
-   abstract String symbol();
+   abstract char symbol();
 
-   Track leaveAndGetNext() {
+   Track doTick() {
       try {
          return next(cart.getDirection());
       } finally {
@@ -69,14 +71,14 @@ abstract class Track {
    }
 
    public String desc() {
-      return toString() + "@" + pos;
+      return symbol() + "@" + pos;
    }
 
    @Override
    public String toString() {
       return ofNullable(cart)
          .map(MineCart::toString)
-         .orElseGet(this::symbol);
+         .orElseGet(() -> "" + symbol());
    }
 }
 

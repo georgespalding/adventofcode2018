@@ -3,6 +3,8 @@ package com.github.georgespalding.adventofcode.thirteen;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.IntStream.range;
 
+import com.github.georgespalding.adventofcode.Pair;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,7 +39,7 @@ public class TrackParser {
 
    }
 
-   public static List<MineCart> parse(Stream<String> trackLines) {
+   public static Pair<List<MineCart>, LinkedList<Track[]>> parse(Stream<String> trackLines) {
       final List<MineCart> carts = new ArrayList<>();
       final LinkedList<Track[]> lineTrackList = new LinkedList<>();
       trackLines
@@ -65,6 +67,6 @@ public class TrackParser {
                      }));
             lineTrackList.addLast(tracks);
          });
-      return carts;
+      return Pair.fromEntry(carts, lineTrackList);
    }
 }

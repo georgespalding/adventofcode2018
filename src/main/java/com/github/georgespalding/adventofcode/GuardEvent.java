@@ -34,7 +34,7 @@ public class GuardEvent {
    enum Event {
       BeginShift,
       FallAsleep,
-      WakeUp;
+      WakeUp
    }
 
 }

@@ -8,7 +8,6 @@ import com.github.georgespalding.adventofcode.Pair;
 
 import java.util.Optional;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class Grid {
 
@@ -49,18 +48,19 @@ public class Grid {
    }
 
    Optional<Pair<String, Long>> findBestSquare() {
-      return IntStream.rangeClosed(1,fuelCells.length)
-         .peek(dim-> System.out.println("Dim:"+dim+" "+System.currentTimeMillis()))
+      return IntStream.rangeClosed(1, fuelCells.length)
+         .peek(dim -> System.out.println("Dim:" + dim + " " + System.currentTimeMillis()))
          .mapToObj(this::findBestSquare)
          .filter(Optional::isPresent)
          .map(Optional::get)
          .max(comparingLong(Pair::getVal));
 
    }
+
    Optional<Pair<String, Long>> findBestSquare(int dim) {
-      return IntStream.rangeClosed(1, fuelCells.length - (dim-1))
-         .mapToObj(y -> IntStream.rangeClosed(1, fuelCells.length - (dim-1))
-            .mapToObj(x -> fromEntry(dim+": "+x + "," + y, powerOfSquare(x, y, dim))))
+      return IntStream.rangeClosed(1, fuelCells.length - (dim - 1))
+         .mapToObj(y -> IntStream.rangeClosed(1, fuelCells.length - (dim - 1))
+            .mapToObj(x -> fromEntry(dim + ": " + x + "," + y, powerOfSquare(x, y, dim))))
          .flatMap(s -> s)
          .max(comparingLong(Pair::getVal));
    }

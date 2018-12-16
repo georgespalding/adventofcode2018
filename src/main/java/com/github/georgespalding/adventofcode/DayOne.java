@@ -1,6 +1,5 @@
 package com.github.georgespalding.adventofcode;
 
-import static java.nio.file.Files.lines;
 import static java.util.stream.LongStream.iterate;
 
 import java.util.HashSet;
@@ -46,8 +45,8 @@ public class DayOne {
 
       final long end = System.currentTimeMillis();
 
-      System.out.printf("Ans1: %s (%d ms)\n",  frequency, mid-start);
-      System.out.printf("Ans2: %s (%d ms)\n",  repeat, end-mid);
-      System.out.printf("Total (%d ms)\n", end-start);
+      System.out.printf("Ans1: %s (%d ms)\n", frequency, mid - start);
+      System.out.printf("Ans2: %s (%d ms)\n", repeat, end - mid);
+      System.out.printf("Total (%d ms)\n", end - start);
    }
 }

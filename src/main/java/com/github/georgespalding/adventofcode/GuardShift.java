@@ -18,7 +18,6 @@ public class GuardShift {
    private final LocalDate date;
    private final List<Nap> naps;
 
-
    GuardShift(GuardEvent guardEvent, List<GuardEvent> guardEvents) {
       assertType(guardEvent, BeginShift);
       guardId = ((GuardBeginShift) guardEvent).getGuardId();
@@ -55,13 +54,13 @@ public class GuardShift {
       return naps;
    }
 
-   public int totalNapMinutes(){
+   public int totalNapMinutes() {
       return naps.stream().mapToInt(Nap::duration).sum();
    }
 
    @Override
    public String toString() {
-      return String.format("GuardShift #%05d %s: %s",guardId,date, renderNaps());
+      return String.format("GuardShift #%05d %s: %s", guardId, date, renderNaps());
    }
 
    public String renderNaps() {

@@ -56,11 +56,12 @@ public class DaySix {
             next = d.findNextClockWise(current, remainingPoints);
             if (next.isPresent()) {
                out.println("k: " + current.coefficient(next.get()));
-               final boolean sameRowOrColumn=current.getX()==next.get().getX()||current.getY()==next.get().getY();
+               final boolean sameRowOrColumn = current.getX() == next.get().getX() || current.getY() == next.get()
+                  .getY();
                current = next.get();
-               if(sameRowOrColumn){
+               if (sameRowOrColumn) {
                   edgePoints.add(current);
-                  next= empty();
+                  next = empty();
                }
             }
          } while (next.isPresent());
@@ -110,11 +111,11 @@ public class DaySix {
       Collection<Point> all
    ) {
       Map<Point, List<Point>> closestPointsForPoint = new HashMap<>();
-//      for (int y = UPPERRIGHT.getY(); y >= LOWERLEFT.getY(); y--) {
+      //      for (int y = UPPERRIGHT.getY(); y >= LOWERLEFT.getY(); y--) {
       for (int y = LOWERLEFT.getY(); y <= UPPERRIGHT.getY(); y++) {
          out.printf("%3s: %s-%s: |", y, LOWERLEFT.getX(), UPPERRIGHT.getX());
          for (int x = LOWERLEFT.getX(); x <= UPPERRIGHT.getX(); x++) {
-            final Point curr = new Point(x, y," ");
+            final Point curr = new Point(x, y, " ");
             if (edges.contains(curr)) {
                out.print("x");
             } else if (internal.contains(curr)) {
@@ -135,7 +136,7 @@ public class DaySix {
                   case 1:
                      final Point clos = closest.get(0);
                      closestPointsForPoint.computeIfAbsent(clos, c -> new ArrayList<>())
-                        .add(new Point(x,y,clos.id.toLowerCase()));
+                        .add(new Point(x, y, clos.id.toLowerCase()));
                      out.print(clos.id);
                      break;
                   default:
@@ -216,21 +217,20 @@ public class DaySix {
 
    static class Point implements Comparable<Point> {
 
+      static final String ids = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      static int ID = 0;
       final int x;
       final int y;
       final String id;
-
       Point(int x, int y, String id) {
          this.x = x;
          this.y = y;
-         this.id=id;
+         this.id = id;
       }
 
-      static int ID=0;
-      static final String ids="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
       static Point parse(String line) {
          LineParser p = new LineParser(line);
-         return new Point(p.nextInt(','), p.nextInt('<'), ids.substring(ID++,ID));
+         return new Point(p.nextInt(','), p.nextInt('<'), ids.substring(ID++, ID));
       }
 
       int getX() {
@@ -270,7 +270,7 @@ public class DaySix {
 
       @Override
       public String toString() {
-         return String.format("%s:{ %3s, %3s}",id, x, y);
+         return String.format("%s:{ %3s, %3s}", id, x, y);
       }
 
       @Override

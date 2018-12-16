@@ -19,11 +19,11 @@ class Nap {
    }
 
    int duration() {
-      return end-begin;
+      return end - begin;
    }
 
    IntStream sleepMinutes() {
-      return rangeClosed(begin,end);
+      return rangeClosed(begin, end);
    }
 
 }

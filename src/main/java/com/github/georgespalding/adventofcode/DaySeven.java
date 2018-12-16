@@ -1,8 +1,8 @@
 package com.github.georgespalding.adventofcode;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.out;
 import static java.lang.System.err;
+import static java.lang.System.out;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -23,18 +23,19 @@ import java.util.stream.Stream;
 
 public class DaySeven {
 
+   static final boolean debug = false;
    private static final Map<String, List<String>> rawDag =
       Util.streamResource("7.lst")
          .map(DaySeven::parse)
          .collect(groupingBy(s -> s.substring(0, 1)))
-      .entrySet().stream()
+         .entrySet().stream()
          .collect(toMap(
             Entry::getKey,
             e -> e.getValue().stream()
                .map(s -> s.substring(1, 2))
                .sorted()
                .collect(toList())));
-   static final boolean debug=false;
+
    private static String parse(String line) {
       //Step E must be finished before step B can begin.
       return new String(new char[] { line.charAt(5), line.charAt(36) });
@@ -79,7 +80,7 @@ public class DaySeven {
                }
                nextAvailable.accept(unblocked, () -> done.add(unblocked));
             });
-         if(nextUnblocked.isEmpty()) {
+         if (nextUnblocked.isEmpty()) {
             // There is nothing to do.
             final OptionalInt tick = workers.stream()
                .filter(Worker::busy)
@@ -93,13 +94,19 @@ public class DaySeven {
       final long mid = currentTimeMillis();
       final long end = currentTimeMillis();
 
-      final int finishTime=workers.stream().mapToInt(Worker::getAvailableAfter).max().getAsInt();
+      final int finishTime = workers.stream().mapToInt(Worker::getAvailableAfter).max().getAsInt();
       clock.advanceTo(finishTime, workers, done);
 
       out.printf("Load: (%d ms)\n", start - load);
       out.printf("Ans1: %s (%d ms)\n", done.stream().map(Node::getName).collect(joining()), mid - start);
       out.printf("Ans2: Takes %s s to complete (%d ms)\n", finishTime, end - mid);
       out.printf("Total (%d ms)\n", end - start);
+   }
+
+   private static Stream<Node> unblocked(List<Node> done, List<Node> remaining) {
+      return remaining.stream()
+         .filter(n -> n.notBlocked(done))
+         .sorted();
    }
 
    private static class Clock {
@@ -110,19 +117,25 @@ public class DaySeven {
       void advanceTo(int time, List<Worker> workers, List<Node> done) {
          range(this.time, time).forEach(t -> renderTick(t, workers, done));
          this.time = time;
-         if(debug)err.println(time + "s - Tock");
+         if (debug) {
+            err.println(time + "s - Tock");
+         }
          events.sort(Comparator.comparingInt(Pair::getKey));
          while (!events.isEmpty() && events.getFirst().getKey() <= time) {
             final Pair<Integer, Runnable> task = events.removeFirst();
             task.getVal().run();
-            if(debug)err.println(task.getKey() +"-"+time+"s - Ran task");
+            if (debug) {
+               err.println(task.getKey() + "-" + time + "s - Ran task");
+            }
          }
       }
 
       private void renderTick(int sec, List<Worker> workers, List<Node> done) {
-         if(debug)out.println(String.format("   %3d        ",sec)
-            + workers.stream().map(worker -> worker.currentTask).collect(joining("        ")) + "   "
-            + done.stream().map(n -> n.name).collect(toList()));
+         if (debug) {
+            out.println(String.format("   %3d        ", sec)
+               + workers.stream().map(worker -> worker.currentTask).collect(joining("        ")) + "   "
+               + done.stream().map(n -> n.name).collect(toList()));
+         }
       }
 
       void event(int when, Runnable task) {
@@ -132,12 +145,6 @@ public class DaySeven {
       int get() {
          return time;
       }
-   }
-
-   private static Stream<Node> unblocked(List<Node> done, List<Node> remaining) {
-      return remaining.stream()
-         .filter(n -> n.notBlocked(done))
-         .sorted();
    }
 
    static class Worker {
@@ -164,11 +171,15 @@ public class DaySeven {
          assert idle() : "accepted job while busy";
          availableAfter = clock.get() + job.executionTime();
          currentTask = job.name;
-         if(debug) err.println(clock.get() + "s - worker#" + id + " accept job " + job.name + " (" + job.executionTime() + ") available from " + availableAfter);
+         if (debug) {
+            err.println(clock.get() + "s - worker#" + id + " accept job " + job.name + " (" + job.executionTime() + ") available from " + availableAfter);
+         }
          clock.event(availableAfter, () -> {
             currentTask = ".";
             post.run();
-            if(debug)err.println(clock.get() + "s - worker#" + id + " completed job " + job.name);
+            if (debug) {
+               err.println(clock.get() + "s - worker#" + id + " completed job " + job.name);
+            }
          });
       }
 
@@ -208,7 +219,7 @@ public class DaySeven {
       }
 
       int executionTime() {
-         return 60+
+         return 60 +
             1 + name.toCharArray()[0] - 'A';
       }
 

@@ -37,13 +37,13 @@ public class DayFour {
                .flatMap(Collection::stream)
                .collect(toList())))
          .collect(toList());
-      
+
       final long start = currentTimeMillis();
 
       final Pair<Integer, List<Nap>> napsOfSnooziestGuard = napsByGuardId.stream()
          //.peek(p -> out.printf("#%5d: %4d m\n", p.getKey(), p.getVal().stream().mapToInt(Nap::duration).sum()))
          .min(comparingInt(p -> -p.getVal().stream().mapToInt(Nap::duration).sum()))
-         .orElseGet(()->Pair.fromEntry(-1, emptyList()));
+         .orElseGet(() -> Pair.fromEntry(-1, emptyList()));
 
       final int bestMinute = napsOfSnooziestGuard.getVal().stream()
          .flatMapToInt(Nap::sleepMinutes)
@@ -70,7 +70,7 @@ public class DayFour {
             .min(comparingInt(each -> -each.getValue()))
             .map(Entry::getKey).orElse(0)))
          .findFirst()
-         .orElseGet(()->Pair.fromEntry(-1,-1));
+         .orElseGet(() -> Pair.fromEntry(-1, -1));
 
       final long end = currentTimeMillis();
 

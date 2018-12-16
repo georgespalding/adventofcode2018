@@ -9,7 +9,7 @@ class MovingPoint {
 
    //position=<-10569, -21315> velocity=< 1,  2>
    MovingPoint(String line) {
-      final LineParser parser=new LineParser(line);
+      final LineParser parser = new LineParser(line);
       initial = new Point(parser);
       velocity = new Point(parser);
    }

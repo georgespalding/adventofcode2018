@@ -4,8 +4,6 @@ import static com.github.georgespalding.adventofcode.Util.getResource;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
 import static java.nio.file.Files.newInputStream;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.IntStream.of;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

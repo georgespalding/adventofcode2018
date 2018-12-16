@@ -3,7 +3,6 @@ package com.github.georgespalding.adventofcode.twelve;
 import static com.github.georgespalding.adventofcode.Util.streamResource;
 import static java.lang.System.out;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
 
 import com.github.georgespalding.adventofcode.template.Day;
@@ -27,20 +26,28 @@ public class DayTwelve {
          lines.stream().filter(l -> l.contains(" => ")));
 
       dayTwelve.start();
-      if (debug) out.println(thing.header());
+      if (debug) {
+         out.println(thing.header());
+      }
 
-      if (debug) out.printf("%2d: %s\n", 0, thing.toString());
+      if (debug) {
+         out.printf("%2d: %s\n", 0, thing.toString());
+      }
       rangeClosed(1, 20)
          .forEach(i -> {
             thing.generation();
-            if (debug) out.printf("%2d: %s\n", i, thing.toString());
+            if (debug) {
+               out.printf("%2d: %s\n", i, thing.toString());
+            }
          });
       dayTwelve.partOne(thing.potNumSum());
 
       LongStream.rangeClosed(21L, 100)
          .forEach(i -> {
             thing.generation();
-            if (debug) out.printf("%2d: %s\n", i, thing.toString());
+            if (debug) {
+               out.printf("%2d: %s\n", i, thing.toString());
+            }
          });
 
       dayTwelve.partTwo(thing.hyperJumpAt100());

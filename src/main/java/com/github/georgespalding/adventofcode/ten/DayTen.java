@@ -16,6 +16,7 @@ public class DayTen {
    final static List<MovingPoint> movingPoints = Util.streamResource("10.lst")
       .map(MovingPoint::new)
       .collect(toList());
+
    public static void main(String[] args) {
       dayNine.start();
 
@@ -24,7 +25,7 @@ public class DayTen {
       int hiT = Integer.MAX_VALUE;
       Point hiBox = box(hiT);
 
-      assert hiBox.compareTo(loBox) > 0 : "WTF:"+hiBox+".compareTo("+loBox+") == "+hiBox.compareTo(loBox)+" >0";
+      assert hiBox.compareTo(loBox) > 0 : "WTF:" + hiBox + ".compareTo(" + loBox + ") == " + hiBox.compareTo(loBox) + " >0";
 
       while (hiBox.compareTo(loBox) != 0) {
          final boolean goLeft = hiBox.compareTo(loBox) > 0;
@@ -37,23 +38,25 @@ public class DayTen {
             loBox = nextBox;
             loT = nextT;
          }
-         if(debug) out.println("lo("+loT+"):"+loBox+", hi("+hiT+"):"+hiBox);
+         if (debug) {
+            out.println("lo(" + loT + "):" + loBox + ", hi(" + hiT + "):" + hiBox);
+         }
       }
 
       final int capacity = (int) (1 + (loBox.getY() + 3) * (loBox.getX() + 1));
-      StringBuilder sb=new StringBuilder(capacity);
+      StringBuilder sb = new StringBuilder(capacity);
       sb.append('\n');
-      final int t=loT;
+      final int t = loT;
       final List<Point> pointsT = movingPoints.stream()
          .map(mp -> mp.positionAt(t))
          .sorted()
          .collect(toList());
       final Point min = pointsT.get(0);
       final Point max = pointsT.get(pointsT.size() - 1);
-      for (long y = min.getY()-1; y <= max.getY(); y++) {
+      for (long y = min.getY() - 1; y <= max.getY(); y++) {
          for (long x = min.getX(); x <= max.getX(); x++) {
-            final Point coord=new Point(x,y);
-            sb.append(pointsT.stream().anyMatch(coord::equals)?'#':' ');
+            final Point coord = new Point(x, y);
+            sb.append(pointsT.stream().anyMatch(coord::equals) ? '#' : ' ');
          }
          sb.append('\n');
       }
@@ -70,6 +73,6 @@ public class DayTen {
          .collect(toList());
       final Point min = pointsT.get(0);
       final Point max = pointsT.get(pointsT.size() - 1);
-      return Point.box(min,max);
+      return Point.box(min, max);
    }
 }

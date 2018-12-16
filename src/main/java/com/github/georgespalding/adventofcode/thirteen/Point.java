@@ -47,10 +47,10 @@ public class Point implements Comparable<Point> {
 
    @Override
    public int compareTo(Point o) {
-      final int xc = compare(x, o.x);
-      return xc != 0
-         ? xc
-         : compare(y, o.y);
+      final int yc = compare(y, o.y);
+      return yc != 0
+         ? yc
+         : compare(x, o.x);
    }
 
 }

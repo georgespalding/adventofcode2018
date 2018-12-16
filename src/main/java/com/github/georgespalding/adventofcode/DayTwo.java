@@ -59,7 +59,7 @@ public class DayTwo {
    }
 
    public static String sameChars(char[] boxId1, char[] boxId2) {
-      final int maxFail=2;
+      final int maxFail = 2;
       final int length = boxId1.length;
       assert length == boxId2.length;
       StringBuilder same = new StringBuilder();
@@ -67,7 +67,7 @@ public class DayTwo {
          final char boxId1i = boxId1[i];
          if (boxId1i == boxId2[i]) {
             same.append(boxId1i);
-         } else if(same.length()+maxFail < i){
+         } else if (same.length() + maxFail < i) {
             break;
          }
       }

@@ -30,8 +30,8 @@ public class Pair<K, V> {
    }
 
    @Override
-   public String toString() {
-      return "{" + key + ": " + val + '}';
+   public int hashCode() {
+      return Objects.hash(key, val);
    }
 
    @Override
@@ -48,7 +48,7 @@ public class Pair<K, V> {
    }
 
    @Override
-   public int hashCode() {
-      return Objects.hash(key, val);
+   public String toString() {
+      return "{" + key + ": " + val + '}';
    }
 }

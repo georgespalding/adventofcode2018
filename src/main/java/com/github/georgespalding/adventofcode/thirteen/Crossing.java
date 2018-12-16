@@ -53,7 +53,7 @@ class Crossing extends Track {
    }
 
    @Override
-   public String symbol() {
-      return "+";
+   public char symbol() {
+      return '+';
    }
 }

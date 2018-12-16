@@ -35,5 +35,4 @@ class Claim {
       return "Claim{id='" + id + "'}";
    }
 
-
 }
