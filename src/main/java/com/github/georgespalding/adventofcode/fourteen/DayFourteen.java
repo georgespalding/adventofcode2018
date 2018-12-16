@@ -5,17 +5,20 @@ import static java.util.stream.Collectors.joining;
 
 import com.github.georgespalding.adventofcode.template.Day;
 
-import java.util.stream.IntStream;
-
 public class DayFourteen {
 
-   static final boolean debug = false;
+   private static final boolean debug = false;
+   private static final int limit = 825401;
+   private static final int[] search = new int[] { 8, 2, 5, 4, 0, 1 };
+//      private static final int limit = 51589;
+//      private static final int[] search = new int[] { 5, 1, 5, 8, 9 };
+//      private static final int limit = 18;
+//      private static final int[] search = new int[] { 9,2,5,1,0 };
+   private static final int total = (20207075+10);
+   private static final int[] recipes = new int[total + 2];
 
    public static void main(String[] args) {
-      final int limit = 825401;
-      final int total = limit + 10;
-      final Day<Object, Object> dayNine = new Day<>();
-      int[] recipes = new int[total + 2];
+      final Day<String, Integer> dayNine = new Day<>();
       int elf1 = 0;
       int elf2 = 1;
       recipes[elf1] = 3;
@@ -24,39 +27,53 @@ public class DayFourteen {
 
       dayNine.start();
 
+      int searchPos = 0;
       while (recipeCount <= total) {
          if (debug) {
-            printSitu(elf1, elf2, recipes, recipeCount);
+            printSitu(elf1, elf2, recipeCount);
          }
          final int recipeElf1 = recipes[elf1];
          final int recipeElf2 = recipes[elf2];
          int sum = recipeElf1 + recipeElf2;
+         int digit = sum % 10;
          if (sum > 9) {
             recipes[recipeCount++] = 1;
-            recipes[recipeCount++] = sum % 10;
-         } else {
-            recipes[recipeCount++] = sum;
+            if (searchPos < search.length) {
+               searchPos = search[searchPos] == 1
+                  ? searchPos + 1
+                  : 0;
+               if (searchPos == search.length) {
+                  dayNine.partTwo(recipeCount - search.length);
+               }
+            }
+         }
+         recipes[recipeCount++] = digit;
+         if (searchPos < search.length) {
+            searchPos = search[searchPos] == digit
+               ? searchPos + 1
+               : 0;
+            if (searchPos == search.length) {
+               dayNine.partTwo(recipeCount - search.length);
+            }
          }
          elf1 = (elf1 + 1 + recipeElf1) % recipeCount;
          elf2 = (elf2 + 1 + recipeElf2) % recipeCount;
       }
 
-      dayNine.partOne(stream(pickTenAfter(recipes, limit))
+      dayNine.partOne(stream(pickTenAfter(limit))
          .boxed()
          .map(Object::toString)
          .collect(joining()));
-      dayNine.partTwo("TODO Part2");
 
       dayNine.output();
    }
 
-   private static int[] pickTenAfter(int[] recipes, int pos) {
-      return IntStream.range(pos, 10 + pos)
-         .map(i -> recipes[i])
+   private static int[] pickTenAfter(int pos) {
+      return stream(recipes, pos, 10 + pos)
          .toArray();
    }
 
-   private static void printSitu(int elf1, int elf2, int[] recipes, int recipeCount) {
+   private static void printSitu(int elf1, int elf2, int recipeCount) {
       final StringBuilder sb = new StringBuilder();
       for (int i = 0; i < recipeCount; i++) {
          if (elf1 == i) {
