@@ -40,7 +40,7 @@ class Cavern {
                      int attackForce=3;
                      switch (symbol) {
                         case 'E':
-                           attackForce=elfAttackForce
+                           attackForce=elfAttackForce;
                         case 'G':
                            lot.occupier = new Unit(symbol, lot, attackForce);
                            unitsBySymbol
@@ -61,6 +61,9 @@ class Cavern {
          .forEach(this::connect);
    }
 
+   List<Unit> getElves(){
+      return unitsBySymbol.get('E');
+   }
    List<Unit> unitsInTurnOrder() {
       return unitsBySymbol.values().stream()
          .flatMap(Collection::stream)
@@ -82,20 +85,16 @@ class Cavern {
                .collect(toList());
             // Is war over?
             if (enemyUnits.isEmpty()) {
-               System.out.println("battle is over");
+               if(DayFifteen.debug)System.out.println("battle is over");
                return true;
             }
             // Any enemies within striking distance?
             if (!u.attemptAttack()) {
                final Lot lot = u.getLot();
                Optional<Lot> target = lot.bestPlaceToAttackEnemy();
-               if (target.isEmpty()) {
-                  System.out.println("WTF:" + u.getLot().pos);
-               } else {
+               if (target.isPresent()) {
                   Optional<Lot> step = lot.bestStepToReach(target.get());
-                  if (step.isEmpty()) {
-                     System.out.println("WTF2:" + u.getLot().pos);
-                  } else {
+                  if (step.isPresent()) {
                      u.moveTo(step.get());
                      u.attemptAttack();
                   }
@@ -141,16 +140,6 @@ class Cavern {
          lot.s = olot;
          olot.n = lot;
       });
-   }
-
-   Stream<Lot> inRange(Lot lot) {
-      return Stream.of(
-         lot.n,
-         lot.w,
-         lot.e,
-         lot.s)
-         .filter(Objects::nonNull)
-         .filter(l -> l.occupier == null);
    }
 
    Optional<Lot> lotAt(int x, int y) {
