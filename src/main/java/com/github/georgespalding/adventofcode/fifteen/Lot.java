@@ -1,5 +1,8 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.of;
+
 import com.github.georgespalding.adventofcode.Pair;
 
 import java.util.Collections;
@@ -7,7 +10,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Lot implements Comparable<Lot> {
@@ -35,9 +37,9 @@ class Lot implements Comparable<Lot> {
    }
 
    void floodableArea(Set<Lot> alreadySelected) {
-      Set<Lot> additions = Stream.of(n, w, e, s)
+      Set<Lot> additions = of(n, w, e, s)
          .filter(o -> !alreadySelected.contains(o))
-         .collect(Collectors.toSet());
+         .collect(toSet());
       alreadySelected.addAll(additions);
       additions.forEach(l -> l.floodableArea(alreadySelected));
    }
@@ -47,33 +49,76 @@ class Lot implements Comparable<Lot> {
    }
 
    Stream<Lot> adjacentSpace() {
-      return Stream.of(
+      return adjacentLots()
+         .filter(l -> l.occupier == null);
+   }
+
+   Stream<Lot> adjacentLots() {
+      return of(
          n,
          w,
          e,
          s)
-         .filter(Objects::nonNull)
-         .filter(l -> l.occupier == null);
+         .filter(Objects::nonNull);
    }
 
-   Pair<Integer, Lot> bestLotsToward(Lot other) {
+   // flood fill until closest enemies reached, return the candidate spot
+   Optional<Lot> bestPlaceToAttackEnemy() {
+      final Unit thisUnit = this.occupier;
+      assert thisUnit != null : "Missing unit in this when searching for units to attack";
       final Set<Lot> alreadyCovered = new HashSet<>();
-      int dist = 0;
-      Set<Lot> next = Collections.singleton(other);
+      alreadyCovered.add(this);
+      Set<Lot> next = adjacentSpace().collect(toSet());
       do {
-         alreadyCovered.addAll(next);
-         next = next.stream().flatMap(Lot::adjacentSpace)
+         // Avbrottsvillkor någon av next är granne med denna
+         Optional<Lot> first = next.stream()
+            .flatMap(Lot::adjacentLots)
             .filter(l -> !alreadyCovered.contains(l))
-            .collect(Collectors.toSet());
-         dist++;
-
-         Optional<Lot> first = adjacentSpace().filter(next::contains).findFirst();
+            .filter(thisUnit::containsEnemy)
+            .sorted()
+            .findFirst();
          if (first.isPresent()) {
-            return Pair.fromEntry(dist, first.get());
+            return first;
          }
+
+         alreadyCovered.addAll(next);
+         next = next.stream()
+            .flatMap(Lot::adjacentSpace)
+            .filter(l -> !alreadyCovered.contains(l))
+            .collect(toSet());
+
       } while (!next.isEmpty());
-      return null;
+      return Optional.empty();
    }
+
+   // flood fill until closest enemies reached, return the candidate spot
+   Optional<Lot> bestStepToReach(Lot lot) {
+      final Set<Lot> candidateSteps=this.adjacentSpace().collect(toSet());
+      final Set<Lot> alreadyCovered = new HashSet<>();
+      alreadyCovered.add(lot);
+      Set<Lot> next = lot.adjacentSpace().collect(toSet());
+      do {
+
+         // Avbrottsvillkor någon av next är granne med denna
+         Optional<Lot> first=next.stream()
+            .filter(candidateSteps::contains)
+            .sorted()
+            .findFirst();
+         if (first.isPresent()) {
+            return first;
+         }
+
+         alreadyCovered.addAll(next);
+         next = next.stream()
+            .flatMap(Lot::adjacentSpace)
+            .filter(l -> !alreadyCovered.contains(l))
+            .collect(toSet());
+
+      } while (!next.isEmpty());
+      return Optional.empty();
+   }
+
+
 
    @Override
    public String toString() {

@@ -14,14 +14,28 @@ public class DayFifteen {
 
       day15.start();
 
-      int rounds=0;
-      while(!cavern.carnageIsOver()){
-         System.out.println(cavern.toString());
-         rounds++;
-         cavern.playRound();
+      int rounds = 0;
+      while (!cavern.carnageIsOver()) {
+         boolean roundEndedPRematurely=cavern.playRound();
+         if(!roundEndedPRematurely) {
+            rounds++;
+            System.out.println("After " + rounds + " rounds:");
+            System.out.println(cavern.toString());
+         }
       }
 
-      day15.partOne("TODO Part1");
+      int hpSum = cavern.unitsInTurnOrder().stream()
+         .filter(u -> u.getHitPoints() > 0)
+         .mapToInt(Unit::getHitPoints)
+         .sum();
+      System.out.println("Outcome: " + hpSum + " * " + rounds + " = " + hpSum * rounds);
+      cavern.unitsInTurnOrder().stream()
+         .filter(u -> u.getHitPoints() > 0)
+         .forEach(g -> System.out.println("Winner:" + g));
+      day15.partOne(hpSum * rounds);
+
+
+
       day15.partTwo("TODO Part2");
 
       day15.output();

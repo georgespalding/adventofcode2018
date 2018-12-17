@@ -1,22 +1,18 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-
-import com.github.georgespalding.adventofcode.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Cavern {
@@ -24,7 +20,7 @@ class Cavern {
    private final List<Lot[]> lines;
    private final Map<Character, List<Unit>> unitsBySymbol;
 
-   Cavern(Stream<String> cavernLines) {
+   Cavern(Stream<String> cavernLines, int elfAttackForce) {
       lines = new ArrayList<>();
       unitsBySymbol = new HashMap<>();
       cavernLines
@@ -41,10 +37,12 @@ class Cavern {
                      lot = null;
                   } else {
                      lot = new Lot(pos);
+                     int attackForce=3;
                      switch (symbol) {
                         case 'E':
+                           attackForce=elfAttackForce
                         case 'G':
-                           lot.occupier = new Unit(symbol, lot);
+                           lot.occupier = new Unit(symbol, lot, attackForce);
                            unitsBySymbol
                               .computeIfAbsent(symbol, smbl -> new ArrayList<>())
                               .add(lot.occupier);
@@ -66,50 +64,45 @@ class Cavern {
    List<Unit> unitsInTurnOrder() {
       return unitsBySymbol.values().stream()
          .flatMap(Collection::stream)
+         .filter(u -> u.getHitPoints() > 0)
          .sorted()
          .collect(toList());
    }
 
-   void playRound() {
+   boolean playRound() {
       List<Unit> unitsInTurnOrder = unitsInTurnOrder();
-      unitsInTurnOrder
+      return unitsInTurnOrder
          .stream()
+         // Deferred filtering!!!
          .filter(u -> u.getHitPoints() > 0)
-         .forEach(u -> {
-               final List<Unit> enemyUnits = unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E');
-               // Is war over?
-               if (enemyUnits.isEmpty()) {
-                  System.out.println("battle is over");
+         .anyMatch(u -> {
+            assert u.getHitPoints() > 0 : "Dead units don't fight";
+            final List<Unit> enemyUnits = unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E')
+               .stream().filter(e -> e.getHitPoints() > 0)
+               .collect(toList());
+            // Is war over?
+            if (enemyUnits.isEmpty()) {
+               System.out.println("battle is over");
+               return true;
+            }
+            // Any enemies within striking distance?
+            if (!u.attemptAttack()) {
+               final Lot lot = u.getLot();
+               Optional<Lot> target = lot.bestPlaceToAttackEnemy();
+               if (target.isEmpty()) {
+                  System.out.println("WTF:" + u.getLot().pos);
                } else {
-                  // Any enemies within striking distance?
-                  List<Unit> adjacentEnemies = u.adjacentEnemies();
-                  if (!adjacentEnemies.isEmpty()) {
-                     adjacentEnemies.stream().findFirst().ifPresent(u::attack);
+                  Optional<Lot> step = lot.bestStepToReach(target.get());
+                  if (step.isEmpty()) {
+                     System.out.println("WTF2:" + u.getLot().pos);
                   } else {
-                     final Lot lot = u.getLot();
-                     final Map<Integer, List<Pair<Integer, Lot>>> enemiesByProximity = enemyUnits.stream()
-                        .map(Unit::getLot)
-                        .map(lot::bestLotsToward)
-                        .filter(Objects::nonNull)
-                        .collect(groupingBy(Pair::getKey));
-                     final OptionalInt distClosestEnemy = enemiesByProximity.keySet()
-                        .stream()
-                        .mapToInt(Integer::intValue)
-                        .max();
-                     if (distClosestEnemy.isEmpty()) {
-                        System.out.println("WTF:" + u.getLot().pos);
-                     } else {
-                        final Lot bestMove = enemiesByProximity
-                           .get(distClosestEnemy.getAsInt()).stream()
-                           .sorted(Comparator.comparing(Pair::getVal))
-                           .findFirst().get()
-                           .getVal();
-                        u.moveTo(bestMove);
-                     }
+                     u.moveTo(step.get());
+                     u.attemptAttack();
                   }
                }
             }
-         );
+            return false;
+         });
    }
 
    @Override
@@ -127,6 +120,11 @@ class Cavern {
                   .orElse('.'));
             }
          }
+         sb.append("   ").append(Arrays.stream(ls)
+            .filter(l -> l != null && l.occupier != null)
+            .map(l -> l.occupier)
+            .map(u -> u.symbol() + "(" + u.getHitPoints() + ")")
+            .collect(Collectors.joining(", ")));
          sb.append('\n');
       }
       return sb.toString();
