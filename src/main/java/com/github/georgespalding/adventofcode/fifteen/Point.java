@@ -42,7 +42,7 @@ public class Point implements Comparable<Point> {
 
    @Override
    public String toString() {
-      return String.format("{ %3s, %3s}", x, y);
+      return String.format("{%2s,%2s}", x, y);
    }
 
    @Override

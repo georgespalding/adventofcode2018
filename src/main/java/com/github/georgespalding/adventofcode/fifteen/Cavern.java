@@ -1,5 +1,7 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
+import static java.util.Arrays.stream;
+import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,10 +40,10 @@ class Cavern {
                      lot = null;
                   } else {
                      lot = new Lot(pos);
-                     int attackForce=3;
+                     int attackForce = 3;
                      switch (symbol) {
                         case 'E':
-                           attackForce=elfAttackForce;
+                           attackForce = elfAttackForce;
                         case 'G':
                            lot.occupier = new Unit(symbol, lot, attackForce);
                            unitsBySymbol
@@ -61,76 +64,93 @@ class Cavern {
          .forEach(this::connect);
    }
 
-   List<Unit> getElves(){
+   List<Unit> getElves() {
       return unitsBySymbol.get('E');
    }
+
    List<Unit> unitsInTurnOrder() {
       return unitsBySymbol.values().stream()
          .flatMap(Collection::stream)
-         .filter(u -> u.getHitPoints() > 0)
+         .filter(Unit::isAlive)
          .sorted()
          .collect(toList());
    }
 
-   boolean playRound() {
-      List<Unit> unitsInTurnOrder = unitsInTurnOrder();
-      return unitsInTurnOrder
+   boolean playRound(boolean debug, int round) {
+      AtomicInteger curr = new AtomicInteger();
+      return unitsInTurnOrder()
          .stream()
          // Deferred filtering!!!
-         .filter(u -> u.getHitPoints() > 0)
+         .filter(Unit::isAlive)
          .anyMatch(u -> {
             assert u.getHitPoints() > 0 : "Dead units don't fight";
-            final List<Unit> enemyUnits = unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E')
-               .stream().filter(e -> e.getHitPoints() > 0)
-               .collect(toList());
-            // Is war over?
-            if (enemyUnits.isEmpty()) {
-               if(DayFifteen.debug)System.out.println("battle is over");
-               return true;
-            }
             // Any enemies within striking distance?
-            if (!u.attemptAttack()) {
+            List<Unit> adjacentEnemies = u.adjacentEnemies();
+            if (adjacentEnemies.isEmpty()) {
                final Lot lot = u.getLot();
-               Optional<Lot> target = lot.bestPlaceToAttackEnemy();
+               final Optional<Lot> target = lot.bestPlaceToAttackEnemy();
                if (target.isPresent()) {
-                  Optional<Lot> step = lot.bestStepToReach(target.get());
+                  final Optional<Lot> step = lot.bestStepToReach(target.get());
                   if (step.isPresent()) {
                      u.moveTo(step.get());
-                     u.attemptAttack();
+                     adjacentEnemies = u.adjacentEnemies();
                   }
                }
             }
+            if (!adjacentEnemies.isEmpty()) {
+               return adjacentEnemies.stream().min(comparingInt(Unit::getHitPoints))
+                  .map(u::attack)
+                  .filter(b -> {
+                     debug(debug, round, curr, u);
+                     return b;
+                  })
+                  .filter(attackResult -> attackResult)
+                  .map(tru -> areAllEnemiesDefeated(u))
+                  .orElse(false);
+            }
+            debug(debug, round, curr, u);
             return false;
          });
+   }
+
+   private void debug(boolean debug, int round, AtomicInteger curr, Unit u) {
+      if (debug) {
+         System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u);
+         System.out.println(toString());
+         try {
+            Thread.sleep(400);
+         } catch (InterruptedException e) {
+            e.printStackTrace();
+         }
+      }
    }
 
    @Override
    public String toString() {
       final StringBuilder sb = new StringBuilder();
-      for (int y = 0; y < lines.size(); y++) {
-         final Lot[] ls = lines.get(y);
-         for (int x = 0; x < ls.length; x++) {
-            final Lot lot = ls[x];
-            if (lot == null) {
-               sb.append('#');
-            } else {
-               sb.append(ofNullable(lot.occupier)
-                  .map(Unit::symbol)
-                  .orElse('.'));
-            }
-         }
-         sb.append("   ").append(Arrays.stream(ls)
+      lines.forEach(ls -> {
+         stream(ls)
+            .forEach(lot -> {
+               if (lot == null) {
+                  sb.append('#');
+               } else {
+                  sb.append(ofNullable(lot.occupier)
+                     .map(Unit::symbol)
+                     .orElse('.'));
+               }
+            });
+         sb.append("   ").append(stream(ls)
             .filter(l -> l != null && l.occupier != null)
             .map(l -> l.occupier)
             .map(u -> u.symbol() + "(" + u.getHitPoints() + ")")
             .collect(Collectors.joining(", ")));
          sb.append('\n');
-      }
+      });
       return sb.toString();
    }
 
    // always do this for the lot closest to 0,0
-   void connect(Lot lot) {
+   private void connect(Lot lot) {
       final Point loc = lot.pos;
       lotAt(loc.x + 1, loc.y).ifPresent(olot -> {
          lot.e = olot;
@@ -142,7 +162,7 @@ class Cavern {
       });
    }
 
-   Optional<Lot> lotAt(int x, int y) {
+   private Optional<Lot> lotAt(int x, int y) {
       return ofNullable(lines)
          .filter(ls -> ls.size() > y)
          .map(ls -> ls.get(y))
@@ -150,9 +170,26 @@ class Cavern {
          .map(lots -> lots[x]);
    }
 
-   public boolean carnageIsOver() {
+   private boolean areAllEnemiesDefeated(Unit u) {
+      // Is war over?
+      final List<Unit> enemyUnits = unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E')
+         .stream().filter(e -> e.getHitPoints() > 0)
+         .collect(toList());
+      if (enemyUnits.isEmpty()) {
+         if (DayFifteen.debug) {
+            System.out.println("battle is over");
+         }
+         return true;
+      }
+      return false;
+   }
+
+   boolean warIsStillOn() {
       return unitsBySymbol.values().stream()
-         .anyMatch(l -> l.stream()
-            .filter(Unit::isAlive).findFirst().isEmpty());
+         // No team has no survivors yet.
+         .noneMatch(l -> l.stream()
+            .filter(Unit::isAlive)
+            .findFirst()
+            .isEmpty());
    }
 }

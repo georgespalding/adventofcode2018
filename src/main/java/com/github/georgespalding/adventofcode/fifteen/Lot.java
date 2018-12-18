@@ -3,9 +3,6 @@ package com.github.georgespalding.adventofcode.fifteen;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 
-import com.github.georgespalding.adventofcode.Pair;
-
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -93,14 +90,14 @@ class Lot implements Comparable<Lot> {
 
    // flood fill until closest enemies reached, return the candidate spot
    Optional<Lot> bestStepToReach(Lot lot) {
-      final Set<Lot> candidateSteps=this.adjacentSpace().collect(toSet());
+      final Set<Lot> candidateSteps = this.adjacentSpace().collect(toSet());
       final Set<Lot> alreadyCovered = new HashSet<>();
       alreadyCovered.add(lot);
       Set<Lot> next = lot.adjacentSpace().collect(toSet());
       do {
 
          // Avbrottsvillkor någon av next är granne med denna
-         Optional<Lot> first=next.stream()
+         Optional<Lot> first = next.stream()
             .filter(candidateSteps::contains)
             .sorted()
             .findFirst();
@@ -117,8 +114,6 @@ class Lot implements Comparable<Lot> {
       } while (!next.isEmpty());
       return Optional.empty();
    }
-
-
 
    @Override
    public String toString() {

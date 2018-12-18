@@ -1,14 +1,12 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
-import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Unit implements Comparable<Unit> {
+class Unit implements Comparable<Unit> {
 
    private final char symbol;
    private final int attackPower;
@@ -21,10 +19,6 @@ public class Unit implements Comparable<Unit> {
       this.attackPower = attackPower;
    }
 
-   List<Point> availableRange() {
-      return Collections.emptyList();
-   }
-
    @Override
    public int compareTo(Unit o) {
       return this.lot.pos.compareTo(o.lot.pos);
@@ -34,7 +28,7 @@ public class Unit implements Comparable<Unit> {
       return symbol;
    }
 
-   boolean isEnemy(Unit other) {
+   private boolean isEnemy(Unit other) {
       return this.symbol != other.symbol;
    }
 
@@ -50,15 +44,11 @@ public class Unit implements Comparable<Unit> {
       this.lot.occupier = this;
    }
 
-   public int getAttackPower() {
-      return attackPower;
-   }
-
-   public int getHitPoints() {
+   int getHitPoints() {
       return hitPoints;
    }
 
-   public Lot getLot() {
+   Lot getLot() {
       return lot;
    }
 
@@ -71,29 +61,26 @@ public class Unit implements Comparable<Unit> {
          .collect(toList());
    }
 
-   public void attack(Unit enemy) {
-      enemy.receiveAttack(attackPower);
+   boolean attack(Unit enemy) {
+      return enemy.receiveAttack(attackPower);
    }
 
-   void receiveAttack(int attackPower) {
+   private boolean receiveAttack(int attackPower) {
       hitPoints -= attackPower;
+      //if (DayFifteen.debug) System.out.println(symbol + " at " + lot.pos + " struck -" + attackPower + " hitPoints: " + hitPoints);
       if (hitPoints <= 0) {
+         if (symbol == 'E') {
+            System.out.println("==== ELF DEATH ================");
+         }
          lot.occupier = null;
          lot = null;
-      }
-   }
-
-   boolean attemptAttack() {
-      final List<Unit> adjacentEnemies = adjacentEnemies();
-      if (!adjacentEnemies.isEmpty()) {
-         adjacentEnemies.stream().min(comparingInt(Unit::getHitPoints)).ifPresent(this::attack);
          return true;
       } else {
          return false;
       }
    }
 
-   public boolean isAlive() {
+   boolean isAlive() {
       return hitPoints > 0;
    }
 
@@ -107,7 +94,4 @@ public class Unit implements Comparable<Unit> {
          '}';
    }
 
-   public boolean isAd(Lot l) {
-      return l.occupier != null && this.isEnemy(l.occupier);
-   }
 }
