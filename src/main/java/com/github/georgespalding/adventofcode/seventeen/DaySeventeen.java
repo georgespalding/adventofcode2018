@@ -7,18 +7,18 @@ import com.github.georgespalding.adventofcode.template.Day;
 
 public class DaySeventeen {
 
-   static final boolean debug = false;
+   static final boolean debug = true;
 
    public static void main(String[] args) {
       final Day<Object, Object> day = new Day<>();
       final GeoMap map = parse(Util.streamResource("17/17.lst"));
-      System.out.println(map);
+
       day.start();
+      map.run();
+      long[] res= map.countChars(new char[]{'|','~'});
+      day.partOne(res[0]+res[1]);
 
-      
-
-      day.partOne("TODO Part1");
-      day.partTwo("TODO Part2");
+      day.partTwo(res[1]);
 
       day.output();
    }

@@ -22,15 +22,15 @@ public class GeoMapParser {
       List<Point> sorted = lines.stream().flatMap(Line::points)
          .sorted()
          .collect(toList());
-      final int minX = sorted.stream().mapToInt(Point::getX).min().getAsInt() - 1;
-      final int maxX = sorted.stream().mapToInt(Point::getX).max().getAsInt() + 1;
+      final int minX = sorted.stream().mapToInt(Point::getX).min().getAsInt() - 2;
+      final int maxX = sorted.stream().mapToInt(Point::getX).max().getAsInt() + 3;
       final int maxY = sorted.stream().mapToInt(Point::getY).max().getAsInt() + 1;
+      final int minY = sorted.stream().mapToInt(Point::getY).min().getAsInt();
 
       final int width = maxX - minX;
-      final int offsetX = minX;
       final char[][] grid = new char[width][maxY];
-      lines.forEach(l -> l.draw(grid, offsetX));
-      return new GeoMap(grid, offsetX);
+      lines.forEach(l -> l.draw(grid, minX));
+      return new GeoMap(grid, minX, minY);
    }
 
    //x=495, y=2..7
