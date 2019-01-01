@@ -1,15 +1,15 @@
-package com.github.georgespalding.adventofcode.seventeen;
+package com.github.georgespalding.adventofcode.eighteen;
 
 import static java.lang.Integer.compare;
 
 import java.util.Objects;
 
-public class Point implements Comparable<Point> {
+class Point implements Comparable<Point> {
 
    final int x;
    final int y;
 
-   public Point(int x, int y) {
+   Point(int x, int y) {
       this.x = x;
       this.y = y;
    }
