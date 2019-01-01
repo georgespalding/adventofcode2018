@@ -15,10 +15,6 @@ class Acre {
       this.loc = loc;
    }
 
-   void adjacent(Acre adjacent) {
-      surroundingAcres.add(adjacent);
-   }
-
    Use nextUse(boolean isEven) {
       if (isEven) {
          return oddUse = evenUse.nextUse(surroundingAcres.stream().map(acre -> acre.evenUse));

@@ -9,11 +9,10 @@ import com.github.georgespalding.adventofcode.template.Day;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Day18 {
 
-   static final boolean debug = false;
+   static final boolean debug = true;
 
    public static void main(String[] args) {
       final Day<Pair<Long, Integer>, Pair<Long, Integer>> day = new Day<>();
@@ -21,7 +20,7 @@ public class Day18 {
       out.println(area.toString());
       day.start();
       while (area.minute() < 10) {
-         area.nextMinute(false);
+         area.nextMinuteFaster();
          if (debug) {
             out.println("After " + area.minute()
                + " minute" + (area.minute() == 0 ? "" : "s")
@@ -32,10 +31,10 @@ public class Day18 {
       day.partOne(fromEntry(area.count(Use.wooded) * area.count(Use.lumberyard), area.minute()));
 
       final int END = 1000_000_000;
-      final Map<UUID, Integer> minuteBySeen = new HashMap<>();
+      final Map<Long, Integer> minuteBySeen = new HashMap<>();
       boolean hyperJumpDone = false;
       while (area.minute() < END) {
-         UUID res = area.nextMinute(area.minute()>550);
+         Long res = area.nextMinuteFaster();
          if (!hyperJumpDone && minuteBySeen.containsKey(res)) {
             final int currMinute = area.minute();
             final int cycle = currMinute - minuteBySeen.get(res);

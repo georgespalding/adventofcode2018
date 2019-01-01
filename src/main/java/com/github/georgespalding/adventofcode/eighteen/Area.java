@@ -10,9 +10,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.zip.CRC32;
 
 class Area {
 
+   final CRC32 crc32 = new CRC32();
    private final List<Acre[]> lines;
    private final byte[] reuse;
    private int minute;
@@ -64,10 +66,19 @@ class Area {
       return sb.toString();
    }
 
+   long nextMinuteFaster() {
+      final boolean isEven = minute % 2 == 0;
+      crc32.reset();
+      lines.stream().flatMap(Arrays::stream)
+         .forEach(acre -> crc32.update((byte) acre.nextUse(isEven).symbol()));
+      minute++;
+      return crc32.getValue();
+   }
+
    UUID nextMinute(boolean useResult) {
       final boolean isEven = minute % 2 == 0;
       IntStream.range(0, lines.size())
-         //.parallel()
+         .parallel()
          .forEach(i -> {
             final Acre[] acres = lines.get(i);
             int length = acres.length;

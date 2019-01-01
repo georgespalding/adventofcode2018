@@ -1,32 +1,45 @@
 package com.github.georgespalding.adventofcode.eighteen;
 
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
-
 import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public enum Use {
    open('.') {
-      protected Use nextUse(Map<Use, Integer> surroundingUseHistogram) {
-         return surroundingUseHistogram.getOrDefault(wooded, 0) >= 3
-            ? wooded
-            : this;
+      protected Use nextUse(Stream<Use> surrounding) {
+         return nextUse(wooded, surrounding);
       }
    },
    wooded('|') {
-      protected Use nextUse(Map<Use, Integer> surroundingUseHistogram) {
-         return surroundingUseHistogram.getOrDefault(lumberyard, 0) >= 3
-            ? lumberyard
-            : this;
+      protected Use nextUse(Stream<Use> surrounding) {
+         return nextUse(lumberyard, surrounding);
       }
    },
    lumberyard('#') {
-      protected Use nextUse(Map<Use, Integer> surroundingUseHistogram) {
-         return surroundingUseHistogram.getOrDefault(lumberyard, 0) >= 1
-            && surroundingUseHistogram.getOrDefault(wooded, 0) >= 1
+      protected Use nextUse(Stream<Use> surrounding) {
+         final AtomicBoolean haveLumb = new AtomicBoolean();
+         final AtomicBoolean haveWood = new AtomicBoolean();
+         surrounding.takeWhile(use -> {
+            switch (use) {
+               case wooded:
+                  haveWood.set(true);
+                  if (haveLumb.get()) {
+                     return false;
+                  } else {
+                     break;
+                  }
+               case lumberyard:
+                  haveLumb.set(true);
+                  if (haveWood.get()) {
+                     return false;
+                  } else {
+                     break;
+                  }
+            }
+            return true;
+         }).forEach(ignored -> {});
+         return haveLumb.get() && haveWood.get()
             ? this
             : open;
       }
@@ -46,15 +59,18 @@ public enum Use {
          .orElseThrow(() -> new IllegalArgumentException("Unknownsymbol '" + symbol + "'"));
    }
 
-   EnumMap<Use, Integer> usageHistogram(Stream<Use> uses) {
-      return uses.collect(toMap(identity(), u -> 1, (a, b) -> a + b, () -> new EnumMap<>(Use.class)));
+   protected Use nextUse(Use become, Stream<Use> surrounding) {
+      final AtomicInteger becomeCount = new AtomicInteger();
+      surrounding.takeWhile(use -> {
+         if (use == become) {
+            return becomeCount.incrementAndGet() < 3;
+         }
+         return true;
+      }).forEach(ignored -> {});
+      return becomeCount.get() >= 3 ? become : this;
    }
 
-   protected abstract Use nextUse(Map<Use, Integer> surroundingUseHistogram);
-
-   Use nextUse(Stream<Use> surroundingUses) {
-      return nextUse(usageHistogram(surroundingUses));
-   }
+   abstract Use nextUse(Stream<Use> surroundingUses);
 
    char symbol() {
       return symbol;
