@@ -10,7 +10,7 @@ import java.util.OptionalInt;
 
 public class DayFifteen {
 
-   static final boolean debug = true;
+   static final boolean debug = false;
    private static final Day<Object, Integer> day15 = new Day<>();
    private static final String INPUT = "15/15.lst";
 
@@ -39,17 +39,17 @@ public class DayFifteen {
          .filter(Unit::isAlive)
          .forEach(g -> System.out.println("Winner:" + g));
       day15.partOne(hpSum * rounds);
-      int lo = 2;
+      int lo = 11;//TODO change to 2
       boolean loOk = cavern.getElves().stream().allMatch(Unit::isAlive);
       assert !loOk : "Lo elfAttack " + lo + " is not low enough";
-      int hi = 50;
-      boolean hiOk = runGame(INPUT, hi).isPresent();
+      int hi = 13;//TODO change to 35
+      boolean hiOk = runGame(hi).isPresent();
       assert hiOk : "Hi elfAttack " + hi + " is not high enough";
       OptionalInt lowestElfAttack = OptionalInt.empty();
       OptionalInt elfLowestWinningScore = OptionalInt.empty();
       while (hi - lo > 1) {
          int next = (lo + hi) / 2;
-         OptionalInt elfWinningScore = runGame(INPUT, next);
+         OptionalInt elfWinningScore = runGame(next);
          if (elfWinningScore.isPresent()) {
             // go lower
             hi = next;
@@ -64,14 +64,14 @@ public class DayFifteen {
       day15.output();
    }
 
-   private static OptionalInt runGame(String input, int elfAttach) {
-      Cavern cavern = new Cavern(Util.streamResource(input), elfAttach);
+   private static OptionalInt runGame(int elfAttach) {
+      Cavern cavern = new Cavern(Util.streamResource(DayFifteen.INPUT), elfAttach);
       final List<Unit> origOrder = cavern.unitsInTurnOrder();
 
       int rounds = 0;
       //TODO save time by aborting when the first elf dies
       while (cavern.warIsStillOn()) {
-         boolean roundEndedPrematurely = cavern.playRound(elfAttach == 12, rounds + 1);
+         boolean roundEndedPrematurely = cavern.playRound(debug && elfAttach == 12, rounds + 1);
          if (!roundEndedPrematurely) {
             rounds++;
             if (debug) {

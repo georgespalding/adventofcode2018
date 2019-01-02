@@ -1,10 +1,7 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
-import static com.github.georgespalding.adventofcode.Pair.fromEntry;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-
-import com.github.georgespalding.adventofcode.Pair;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,7 +45,7 @@ class Unit implements Comparable<Unit> {
       return other.occupier == null || this.symbol != other.occupier.symbol;
    }
 
-   Stream<Lot> adjacentFreeOrHostile() {
+   private Stream<Lot> adjacentFreeOrHostile() {
       return lot.adjacentLots().filter(this::isFreeOrHostile);
    }
 
@@ -106,58 +103,26 @@ class Unit implements Comparable<Unit> {
          '}';
    }
 
-   Optional<Lot> bestMoveToAttack() {
-      final Map<Lot, OptionalInt> cache = new HashMap<>();
-      final Set<Lot> seen = new HashSet<>();
-      seen.add(lot);
-      return lot.adjacentSpace()
-         .map(l -> fromEntry(l, distToEnemy(l, cache, seen)))
-         .filter(p -> p.getVal().isPresent())
-         .map(p -> fromEntry(p.getKey(), p.getVal().getAsInt()))
-         .sorted(Comparator.comparing(Pair::getKey))
-         .sorted(Comparator.comparingInt(Pair::getVal))
-         // do NOT inline due to // stream
-         .findFirst()
-         .map(Pair::getKey);
-   }
-
-   OptionalInt distToEnemy(Lot aLot, Map<Lot, OptionalInt> cache, Set<Lot> seen) {
-      if (cache.containsKey(aLot)) {
-         return cache.get(aLot);
-      } else {
-         final OptionalInt res;
-         if (isEnemy(aLot.occupier)) {
-            res = OptionalInt.of(0);
-         } else {
-            res = aLot.adjacentLots()
-               .filter(a -> !seen.contains(a))
-               .peek(seen::add)
-               .filter(this::isFreeOrHostile)
-               .sorted()
-               .map(l -> distToEnemy(l, cache, seen))
-               .filter(OptionalInt::isPresent)
-               .map(OptionalInt::getAsInt)
-               .mapToInt(i -> i + 1)
-               .min();
-         }
-         cache.put(aLot, res);
-         return res;
-      }
-   }
-
-   Optional<Lot> bestMoveToAttack2() {
+   Optional<Lot> bestMoveToAttackEnemy() {
+      // TODO cache
       final Map<Lot, OptionalInt> cache = new HashMap<>();
 
       Map<OptionalInt, List<Lot>> bestMoves = adjacentFreeOrHostile()
          .collect(groupingBy(this::distanceToFirstEnemyFrom));
-      Optional<Lot> bestest = bestMoves.entrySet().stream()
+      Optional<Lot> bestMove = bestMoves.entrySet().stream()
          .filter(e -> e.getKey().isPresent()).min(Comparator.comparingInt(e -> e.getKey().getAsInt()))
-         .flatMap(ls->ls.getValue().stream().sorted().findFirst());
-      System.out.println("Picked: " + bestest + "from " + bestMoves);
-      return bestest;
+         .flatMap(ls -> ls.getValue().stream().sorted().findFirst());
+      if (DayFifteen.debug) {
+         if (bestMove.isPresent()) {
+            System.out.println("Picked: " + bestMove + "from " + bestMoves);
+         } else {
+            System.out.println("No move to be made");
+         }
+      }
+      return bestMove;
    }
 
-   OptionalInt distanceToFirstEnemyFrom(Lot someLot) {
+   private OptionalInt distanceToFirstEnemyFrom(Lot someLot) {
       Set<Lot> alreadySearched = new HashSet<>();
       alreadySearched.add(someLot);
       int dist = 0;
@@ -175,7 +140,7 @@ class Unit implements Comparable<Unit> {
       return OptionalInt.empty();
    }
 
-   List<Lot> flood(List<Lot> edges, Set<Lot> alreadySearched) {
+   private List<Lot> flood(List<Lot> edges, Set<Lot> alreadySearched) {
       return edges.stream()
          .flatMap(Lot::adjacentLots)
          .filter(this::isFreeOrHostile)

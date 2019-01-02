@@ -92,9 +92,15 @@ class Cavern {
          // Any enemies within striking distance?
          List<Unit> adjacentEnemies = u.adjacentEnemies();
          if (adjacentEnemies.isEmpty()) {
-            final Optional<Lot> target = u.bestMoveToAttack2();
-            if (target.isPresent()) {
-               u.moveTo(target.get());
+            final Optional<Lot> bestMove = u.bestMoveToAttackEnemy();
+
+            if (debug) {
+               System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u + " -> " + bestMove);
+               System.out.println(toString());
+            }
+
+            if (bestMove.isPresent()) {
+               u.moveTo(bestMove.get());
                adjacentEnemies = u.adjacentEnemies();
             }
          }
@@ -106,22 +112,21 @@ class Cavern {
                .map(tru -> areAllEnemiesDefeated(u))
                .orElse(false);
          }
-         debug(debug, round, curr, u);
       }
       return uter.hasNext();
-   }
-
-   private void debug(boolean debug, int round, AtomicInteger curr, Unit u) {
-      if (debug) {
-         System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u);
-         System.out.println(toString());
-      }
    }
 
    @Override
    public String toString() {
       final StringBuilder sb = new StringBuilder();
+      sb.append("   ");
+      for (int x = 0; x < lines.get(0).length; x++) {
+         sb.append(x%10);
+      }
+      sb.append('\n');
+      AtomicInteger y = new AtomicInteger();
       lines.forEach(ls -> {
+         sb.append(String.format("%02d ",y.getAndIncrement()));
          stream(ls)
             .forEach(lot -> {
                if (lot == null) {
