@@ -10,19 +10,18 @@ import java.util.OptionalInt;
 
 public class DayFifteen {
 
-   static final boolean debug = false;
+   static final boolean debug = true;
    private static final Day<Object, Integer> day15 = new Day<>();
    private static final String INPUT = "15/15.lst";
 
    public static void main(String[] args) {
-      /*
       Cavern cavern = new Cavern(Util.streamResource(INPUT), 3);
 
       day15.start();
 
       int rounds = 0;
       while (cavern.warIsStillOn()) {
-         boolean roundEndedPrematurely = cavern.playRound(false, rounds+1);
+         boolean roundEndedPrematurely = cavern.playRound(false, rounds + 1);
          if (!roundEndedPrematurely) {
             rounds++;
             System.out.println("After " + rounds + " rounds:");
@@ -40,13 +39,13 @@ public class DayFifteen {
          .filter(Unit::isAlive)
          .forEach(g -> System.out.println("Winner:" + g));
       day15.partOne(hpSum * rounds);
-      */
-      int lo = 10;
-      //boolean loOk = cavern.getElves().stream().allMatch(Unit::isAlive);
-      //assert !loOk : "Lo elfAttack " + lo + " is not low enough";
-      int hi =13;
+      int lo = 2;
+      boolean loOk = cavern.getElves().stream().allMatch(Unit::isAlive);
+      assert !loOk : "Lo elfAttack " + lo + " is not low enough";
+      int hi = 50;
       boolean hiOk = runGame(INPUT, hi).isPresent();
       assert hiOk : "Hi elfAttack " + hi + " is not high enough";
+      OptionalInt lowestElfAttack = OptionalInt.empty();
       OptionalInt elfLowestWinningScore = OptionalInt.empty();
       while (hi - lo > 1) {
          int next = (lo + hi) / 2;
@@ -55,10 +54,12 @@ public class DayFifteen {
             // go lower
             hi = next;
             elfLowestWinningScore = elfWinningScore;
+            lowestElfAttack = OptionalInt.of(next);
          } else {
             lo = next;
          }
       }
+      System.out.println("Elf attack: " +lowestElfAttack);
       day15.partTwo(elfLowestWinningScore.getAsInt());
       day15.output();
    }
@@ -70,7 +71,7 @@ public class DayFifteen {
       int rounds = 0;
       //TODO save time by aborting when the first elf dies
       while (cavern.warIsStillOn()) {
-         boolean roundEndedPrematurely = cavern.playRound(elfAttach==12,rounds + 1);
+         boolean roundEndedPrematurely = cavern.playRound(elfAttach == 12, rounds + 1);
          if (!roundEndedPrematurely) {
             rounds++;
             if (debug) {

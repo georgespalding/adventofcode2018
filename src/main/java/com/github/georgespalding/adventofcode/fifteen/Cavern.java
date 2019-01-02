@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,50 +79,42 @@ class Cavern {
 
    boolean playRound(boolean debug, int round) {
       AtomicInteger curr = new AtomicInteger();
-      return unitsInTurnOrder()
-         .stream()
+      final Iterator<Unit> uter = unitsInTurnOrder().iterator();
+      boolean warOver = false;
+      while (uter.hasNext() && !warOver) {
+         final Unit u = uter.next();
          // Deferred filtering!!!
-         .filter(Unit::isAlive)
-         .anyMatch(u -> {
-            assert u.getHitPoints() > 0 : "Dead units don't fight";
-            // Any enemies within striking distance?
-            List<Unit> adjacentEnemies = u.adjacentEnemies();
-            if (adjacentEnemies.isEmpty()) {
-               final Lot lot = u.getLot();
-               final Optional<Lot> target = lot.bestPlaceToAttackEnemy();
-               if (target.isPresent()) {
-                  final Optional<Lot> step = lot.bestStepToReach(target.get());
-                  if (step.isPresent()) {
-                     u.moveTo(step.get());
-                     adjacentEnemies = u.adjacentEnemies();
-                  }
-               }
+         if (!u.isAlive()) {
+            continue;
+         }
+
+         assert u.getHitPoints() > 0 : "Dead units don't fight";
+         // Any enemies within striking distance?
+         List<Unit> adjacentEnemies = u.adjacentEnemies();
+         if (adjacentEnemies.isEmpty()) {
+            final Optional<Lot> target = u.bestMoveToAttack2();
+            if (target.isPresent()) {
+               u.moveTo(target.get());
+               adjacentEnemies = u.adjacentEnemies();
             }
-            if (!adjacentEnemies.isEmpty()) {
-               return adjacentEnemies.stream().min(comparingInt(Unit::getHitPoints))
-                  .map(u::attack)
-                  .filter(b -> {
-                     debug(debug, round, curr, u);
-                     return b;
-                  })
-                  .filter(attackResult -> attackResult)
-                  .map(tru -> areAllEnemiesDefeated(u))
-                  .orElse(false);
-            }
-            debug(debug, round, curr, u);
-            return false;
-         });
+         }
+         if (!adjacentEnemies.isEmpty()) {
+            warOver = adjacentEnemies.stream()
+               .sorted(comparingInt(Unit::getHitPoints))
+               .findFirst()
+               .map(u::attack)
+               .map(tru -> areAllEnemiesDefeated(u))
+               .orElse(false);
+         }
+         debug(debug, round, curr, u);
+      }
+      return uter.hasNext();
    }
 
    private void debug(boolean debug, int round, AtomicInteger curr, Unit u) {
       if (debug) {
          System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u);
          System.out.println(toString());
-         try {
-            Thread.sleep(400);
-         } catch (InterruptedException e) {
-            e.printStackTrace();
-         }
       }
    }
 

@@ -1,10 +1,22 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
-import static java.util.Optional.ofNullable;
+import static com.github.georgespalding.adventofcode.Pair.fromEntry;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import com.github.georgespalding.adventofcode.Pair;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Stream;
 
 class Unit implements Comparable<Unit> {
 
@@ -29,11 +41,15 @@ class Unit implements Comparable<Unit> {
    }
 
    private boolean isEnemy(Unit other) {
-      return this.symbol != other.symbol;
+      return other != null && this.symbol != other.symbol;
    }
 
-   boolean containsEnemy(Lot lot) {
-      return ofNullable(lot.occupier).map(this::isEnemy).orElse(false);
+   private boolean isFreeOrHostile(Lot other) {
+      return other.occupier == null || this.symbol != other.occupier.symbol;
+   }
+
+   Stream<Lot> adjacentFreeOrHostile() {
+      return lot.adjacentLots().filter(this::isFreeOrHostile);
    }
 
    void moveTo(Lot lot) {
@@ -48,12 +64,8 @@ class Unit implements Comparable<Unit> {
       return hitPoints;
    }
 
-   Lot getLot() {
-      return lot;
-   }
-
    List<Unit> adjacentEnemies() {
-      return getLot().adjacentLots()
+      return lot.adjacentLots()
          .map(l -> l.occupier)
          .filter(Objects::nonNull)
          .filter(this::isEnemy)
@@ -92,6 +104,85 @@ class Unit implements Comparable<Unit> {
          ", hitPoints=" + hitPoints +
          ", lot=" + lot +
          '}';
+   }
+
+   Optional<Lot> bestMoveToAttack() {
+      final Map<Lot, OptionalInt> cache = new HashMap<>();
+      final Set<Lot> seen = new HashSet<>();
+      seen.add(lot);
+      return lot.adjacentSpace()
+         .map(l -> fromEntry(l, distToEnemy(l, cache, seen)))
+         .filter(p -> p.getVal().isPresent())
+         .map(p -> fromEntry(p.getKey(), p.getVal().getAsInt()))
+         .sorted(Comparator.comparing(Pair::getKey))
+         .sorted(Comparator.comparingInt(Pair::getVal))
+         // do NOT inline due to // stream
+         .findFirst()
+         .map(Pair::getKey);
+   }
+
+   OptionalInt distToEnemy(Lot aLot, Map<Lot, OptionalInt> cache, Set<Lot> seen) {
+      if (cache.containsKey(aLot)) {
+         return cache.get(aLot);
+      } else {
+         final OptionalInt res;
+         if (isEnemy(aLot.occupier)) {
+            res = OptionalInt.of(0);
+         } else {
+            res = aLot.adjacentLots()
+               .filter(a -> !seen.contains(a))
+               .peek(seen::add)
+               .filter(this::isFreeOrHostile)
+               .sorted()
+               .map(l -> distToEnemy(l, cache, seen))
+               .filter(OptionalInt::isPresent)
+               .map(OptionalInt::getAsInt)
+               .mapToInt(i -> i + 1)
+               .min();
+         }
+         cache.put(aLot, res);
+         return res;
+      }
+   }
+
+   Optional<Lot> bestMoveToAttack2() {
+      final Map<Lot, OptionalInt> cache = new HashMap<>();
+
+      Map<OptionalInt, List<Lot>> bestMoves = adjacentFreeOrHostile()
+         .collect(groupingBy(this::distanceToFirstEnemyFrom));
+      Optional<Lot> bestest = bestMoves.entrySet().stream()
+         .filter(e -> e.getKey().isPresent()).min(Comparator.comparingInt(e -> e.getKey().getAsInt()))
+         .flatMap(ls->ls.getValue().stream().sorted().findFirst());
+      System.out.println("Picked: " + bestest + "from " + bestMoves);
+      return bestest;
+   }
+
+   OptionalInt distanceToFirstEnemyFrom(Lot someLot) {
+      Set<Lot> alreadySearched = new HashSet<>();
+      alreadySearched.add(someLot);
+      int dist = 0;
+      List<Lot> edges = Collections.singletonList(someLot);
+      Optional<Lot> firstEnemy;
+      do {
+         dist++;
+         edges = flood(edges, alreadySearched);
+         firstEnemy = edges.stream().filter(l -> isEnemy(l.occupier)).findFirst();
+         if (firstEnemy.isPresent()) {
+            return OptionalInt.of(dist);
+         }
+         alreadySearched.addAll(edges);
+      } while (!edges.isEmpty());
+      return OptionalInt.empty();
+   }
+
+   List<Lot> flood(List<Lot> edges, Set<Lot> alreadySearched) {
+      return edges.stream()
+         .flatMap(Lot::adjacentLots)
+         .filter(this::isFreeOrHostile)
+         .filter(l -> !alreadySearched.contains(l))
+         .sorted()
+         .distinct()
+         .collect(toList());
    }
 
 }
