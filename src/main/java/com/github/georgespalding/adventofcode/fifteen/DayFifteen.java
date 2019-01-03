@@ -10,39 +10,36 @@ import java.util.OptionalInt;
 
 public class DayFifteen {
 
-   static final boolean debug = false;
+   static final boolean debug = true;
    private static final Day<Object, Integer> day15 = new Day<>();
    private static final String INPUT = "15/15.lst";
 
    public static void main(String[] args) {
-      Cavern cavern = new Cavern(Util.streamResource(INPUT), 3);
+      {
+         final Cavern cavern = new Cavern(Util.streamResource(INPUT), 3);
 
-      day15.start();
+         day15.start();
 
-      int rounds = 0;
-      while (cavern.warIsStillOn()) {
-         boolean roundEndedPrematurely = cavern.playRound(false, rounds + 1);
-         if (!roundEndedPrematurely) {
-            rounds++;
-            System.out.println("After " + rounds + " rounds:");
-         } else {
-            System.out.println("After " + (rounds + 1) + " rounds:");
+         int rounds = 0;
+         while (cavern.warIsStillOn()) {
+            boolean roundEndedPrematurely = cavern.playRound(false, rounds + 1);
+            if (!roundEndedPrematurely) {
+               rounds++;
+               System.out.println("After " + rounds + " rounds:");
+            } else {
+               System.out.println("After " + (rounds + 1) + " rounds:");
+            }
+            System.out.println(cavern.toString());
          }
-         System.out.println(cavern.toString());
-      }
 
-      int hpSum = cavern.unitsInTurnOrder().stream()
-         .filter(Unit::isAlive)
-         .mapToInt(Unit::getHitPoints)
-         .sum();
-      cavern.unitsInTurnOrder().stream()
-         .filter(Unit::isAlive)
-         .forEach(g -> System.out.println("Winner:" + g));
-      day15.partOne(hpSum * rounds);
+         int hpSum = cavern.unitsInTurnOrder().stream()
+            .filter(Unit::isAlive)
+            .mapToInt(Unit::getHitPoints)
+            .sum();
+         day15.partOne(hpSum * rounds);
+      }
       int lo = 11;//TODO change to 2
-      boolean loOk = cavern.getElves().stream().allMatch(Unit::isAlive);
-      assert !loOk : "Lo elfAttack " + lo + " is not low enough";
-      int hi = 13;//TODO change to 35
+      int hi = 35;//TODO change to 35
       boolean hiOk = runGame(hi).isPresent();
       assert hiOk : "Hi elfAttack " + hi + " is not high enough";
       OptionalInt lowestElfAttack = OptionalInt.empty();
@@ -59,7 +56,7 @@ public class DayFifteen {
             lo = next;
          }
       }
-      System.out.println("Elf attack: " +lowestElfAttack);
+      System.out.println("Elf attack: " + lowestElfAttack);
       day15.partTwo(elfLowestWinningScore.getAsInt());
       day15.output();
    }
@@ -69,22 +66,18 @@ public class DayFifteen {
       final List<Unit> origOrder = cavern.unitsInTurnOrder();
 
       int rounds = 0;
+
       //TODO save time by aborting when the first elf dies
       while (cavern.warIsStillOn()) {
-         boolean roundEndedPrematurely = cavern.playRound(debug && elfAttach == 12, rounds + 1);
+         boolean roundEndedPrematurely = cavern.playRound(
+            debug && elfAttach == 12, rounds + 1);
          if (!roundEndedPrematurely) {
             rounds++;
-            if (debug) {
-               System.out.println("After " + rounds + " rounds:");
-            }
+            debug("After " + rounds + " rounds:");
          } else {
-            if (debug) {
-               System.out.println("After " + (rounds + 1) + " rounds:");
-            }
+            debug("After " + (rounds + 1) + " rounds:");
          }
-         if (debug) {
-            System.out.println(cavern.toString());
-         }
+         debug(cavern.toString());
       }
       final long survivedElves = cavern.getElves().stream().filter(Unit::isAlive).count();
       final int hpSum = cavern.getElves().stream()
@@ -106,6 +99,12 @@ public class DayFifteen {
          return OptionalInt.of(rounds * hpSum);
       } else {
          return OptionalInt.empty();
+      }
+   }
+
+   static void debug(String stuff) {
+      if (debug) {
+         System.out.println(stuff);
       }
    }
 }

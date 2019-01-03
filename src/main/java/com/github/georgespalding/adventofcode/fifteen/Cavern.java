@@ -174,12 +174,9 @@ class Cavern {
          .stream().filter(e -> e.getHitPoints() > 0)
          .collect(toList());
       if (enemyUnits.isEmpty()) {
-         if (DayFifteen.debug) {
-            System.out.println("battle is over");
-         }
-         return true;
+         DayFifteen.debug("battle is over");
       }
-      return false;
+      return enemyUnits.isEmpty();
    }
 
    boolean warIsStillOn() {
