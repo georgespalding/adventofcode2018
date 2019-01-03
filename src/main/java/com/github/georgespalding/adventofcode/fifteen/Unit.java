@@ -3,6 +3,8 @@ package com.github.georgespalding.adventofcode.fifteen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import com.github.georgespalding.adventofcode.Pair;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -108,7 +110,7 @@ class Unit implements Comparable<Unit> {
       final Map<Lot, OptionalInt> cache = new HashMap<>();
 
       Map<OptionalInt, List<Lot>> bestMoves = adjacentFreeOrHostile()
-         .collect(groupingBy(this::distanceToFirstEnemyFrom));
+         .collect(groupingBy(this::distanceToFirstLotBorderingEnemyFrom));
       Optional<Lot> bestMove = bestMoves.entrySet().stream()
          .filter(e -> e.getKey().isPresent()).min(Comparator.comparingInt(e -> e.getKey().getAsInt()))
          .flatMap(ls -> ls.getValue().stream().sorted().findFirst());
@@ -122,6 +124,30 @@ class Unit implements Comparable<Unit> {
       return bestMove;
    }
 
+   private OptionalInt distanceToFirstLotBorderingEnemyFrom(Lot aLot) {
+      Set<Lot> alreadySearched = new HashSet<>();
+      alreadySearched.add(aLot);
+      int dist = 1;
+      List<Lot> edges = Collections.singletonList(aLot);
+      do {
+         // Find bordering to enemy
+         final Optional<Lot> firstBorderingToEnemy = edges.stream()
+            .filter(b -> b.adjacentLots()
+               //Skip this check?
+               // .filter(l -> !alreadySearched.contains(l))
+               .anyMatch(l -> isEnemy(l.occupier)))
+            .sorted()
+            .findFirst();
+         if (firstBorderingToEnemy.isPresent()) {
+            return OptionalInt.of(dist);
+         }
+         edges = flood(edges, alreadySearched);
+         alreadySearched.addAll(edges);
+         dist++;
+      } while (!edges.isEmpty());
+      return OptionalInt.empty();
+   }
+
    private OptionalInt distanceToFirstEnemyFrom(Lot someLot) {
       Set<Lot> alreadySearched = new HashSet<>();
       alreadySearched.add(someLot);
@@ -131,6 +157,8 @@ class Unit implements Comparable<Unit> {
       do {
          dist++;
          edges = flood(edges, alreadySearched);
+         //// Kollar nu efter rutor bredvid en fiende...
+         //firstEnemy = edges.stream().filter(l -> l.adjacentLots().anyMatch(a->isEnemy(a.occupier))).findFirst();
          firstEnemy = edges.stream().filter(l -> isEnemy(l.occupier)).findFirst();
          if (firstEnemy.isPresent()) {
             return OptionalInt.of(dist);
@@ -142,6 +170,7 @@ class Unit implements Comparable<Unit> {
 
    private List<Lot> flood(List<Lot> edges, Set<Lot> alreadySearched) {
       return edges.stream()
+         //         .flatMap(Lot::adjacentSpace)
          .flatMap(Lot::adjacentLots)
          .filter(this::isFreeOrHostile)
          .filter(l -> !alreadySearched.contains(l))
