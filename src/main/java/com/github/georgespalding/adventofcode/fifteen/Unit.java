@@ -1,9 +1,9 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-
-import com.github.georgespalding.adventofcode.Pair;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,16 +11,30 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Stream;
 
-class Unit implements Comparable<Unit> {
+class Unit {
 
+   /**
+    * For instance, the order in which units take their turns within a round is the reading order of their starting positions in that round, regardless of the type of unit or whether other units have moved after the round started.
+    */
+   static final Comparator<Unit> turnOrder =
+      comparing(o -> o.lot.pos);
+   /**
+    * The adjacent target with the fewest hit points is selected;
+    * in a tie, the adjacent target with the fewest hit points
+    * which is first in reading order is selected.
+    */
+   private static final Comparator<Unit> sortEnemies =
+      comparingInt((Unit o) -> o.hitPoints)
+         .thenComparing(o -> o.lot.pos);
    private final char symbol;
    private final int attackPower;
+
+   // Each unit, either Goblin or Elf, ... starts with 200 hit points.
    private int hitPoints = 200;
    private Lot lot;
 
@@ -28,11 +42,6 @@ class Unit implements Comparable<Unit> {
       this.symbol = symbol;
       this.lot = lot;
       this.attackPower = attackPower;
-   }
-
-   @Override
-   public int compareTo(Unit o) {
-      return this.lot.pos.compareTo(o.lot.pos);
    }
 
    char symbol() {
@@ -63,19 +72,32 @@ class Unit implements Comparable<Unit> {
       return hitPoints;
    }
 
-   List<Unit> adjacentEnemies() {
+   /**
+    * To attack, the unit first determines all of the targets that are in range of it by being immediately adjacent to it.
+    * If there are no such targets, the unit ends its turn.
+    * Otherwise, the adjacent target with the fewest hit points is selected;
+    * in a tie, the adjacent target with the fewest hit points which is first in reading order is selected.
+    */
+   List<Unit> adjacentEnemiesInWeaknessOrder() {
       return lot.adjacentLots()
          .map(l -> l.occupier)
-         .filter(Objects::nonNull)
          .filter(this::isEnemy)
-         .sorted()
+         .sorted(Unit.sortEnemies)
          .collect(toList());
    }
 
+   /**
+    * The unit deals damage equal to its attack power to the selected target,
+    * reducing its hit points by that amount.
+    */
    boolean attack(Unit enemy) {
       return enemy.receiveAttack(attackPower);
    }
 
+   /**
+    * If this reduces its hit points to 0 or fewer,
+    * the selected target dies: its square becomes . and it takes no further turns.
+    */
    private boolean receiveAttack(int attackPower) {
       hitPoints -= attackPower;
       //if (DayFifteen.debug) System.out.println(symbol + " at " + lot.pos + " struck -" + attackPower + " hitPoints: " + hitPoints);
@@ -112,7 +134,10 @@ class Unit implements Comparable<Unit> {
       Map<OptionalInt, List<Lot>> bestMoves = adjacentFreeOrHostile()
          .collect(groupingBy(this::distanceToFirstLotBorderingEnemyFrom));
       Optional<Lot> bestMove = bestMoves.entrySet().stream()
-         .filter(e -> e.getKey().isPresent()).min(Comparator.comparingInt(e -> e.getKey().getAsInt()))
+         .filter(e -> e.getKey().isPresent())
+         .min(comparingInt(e -> e.getKey().getAsInt()))
+         // If multiple squares are in range and tied for being reachable in the fewest steps,
+         // the square which is first in reading order is chosen.
          .flatMap(ls -> ls.getValue().stream().sorted().findFirst());
       if (DayFifteen.debug) {
          if (bestMove.isPresent()) {
@@ -124,6 +149,14 @@ class Unit implements Comparable<Unit> {
       return bestMove;
    }
 
+   /**
+    * To move, the unit first considers the squares that are in range and determines which of those squares it could reach in the fewest steps.
+    * A step is a single movement to any adjacent (immediately up, down, left, or right) open (.) square.
+    * Units cannot move into walls or other units.
+    * The unit does this while considering the current positions of units and does not do any prediction about where units will be later.
+    * If the unit cannot reach (find an open path to) any of the squares that are in range, it ends its turn.
+    * If multiple squares are in range and tied for being reachable in the fewest steps, the square which is first in reading order is chosen.
+    */
    private OptionalInt distanceToFirstLotBorderingEnemyFrom(Lot aLot) {
       Set<Lot> alreadySearched = new HashSet<>();
       alreadySearched.add(aLot);
@@ -134,7 +167,7 @@ class Unit implements Comparable<Unit> {
          final Optional<Lot> firstBorderingToEnemy = edges.stream()
             .filter(b -> b.adjacentLots()
                //Skip this check?
-               // .filter(l -> !alreadySearched.contains(l))
+               .filter(l -> !alreadySearched.contains(l))
                .anyMatch(l -> isEnemy(l.occupier)))
             .sorted()
             .findFirst();

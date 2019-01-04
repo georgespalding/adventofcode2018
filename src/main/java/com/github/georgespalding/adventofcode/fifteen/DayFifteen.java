@@ -38,7 +38,10 @@ public class DayFifteen {
             .sum();
          day15.partOne(hpSum * rounds);
       }
-      int lo = 11;//TODO change to 2
+
+//                      System.exit(0);
+      
+      int lo = 3;//TODO change to 3
       int hi = 35;//TODO change to 35
       boolean hiOk = runGame(hi).isPresent();
       assert hiOk : "Hi elfAttack " + hi + " is not high enough";
@@ -57,7 +60,7 @@ public class DayFifteen {
          }
       }
       System.out.println("Elf attack: " + lowestElfAttack);
-      day15.partTwo(elfLowestWinningScore.getAsInt());
+      day15.partTwo(elfLowestWinningScore.getAsInt());     
       day15.output();
    }
 

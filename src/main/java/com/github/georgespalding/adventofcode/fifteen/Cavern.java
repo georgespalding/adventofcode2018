@@ -1,7 +1,6 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
 import static java.util.Arrays.stream;
-import static java.util.Comparator.comparingInt;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -24,6 +23,14 @@ class Cavern {
    private final List<Lot[]> lines;
    private final Map<Character, List<Unit>> unitsBySymbol;
 
+   /**
+    * You scan the area, generating a map of
+    * the walls (#),
+    * open cavern (.),
+    * and starting position of every
+    * Goblin (G) and
+    * Elf (E) (your puzzle input).
+    */
    Cavern(Stream<String> cavernLines, int elfAttackForce) {
       lines = new ArrayList<>();
       unitsBySymbol = new HashMap<>();
@@ -41,6 +48,7 @@ class Cavern {
                      lot = null;
                   } else {
                      lot = new Lot(pos);
+                     //Each unit, either Goblin or Elf, has 3 attack power...
                      int attackForce = 3;
                      switch (symbol) {
                         case 'E':
@@ -69,14 +77,28 @@ class Cavern {
       return unitsBySymbol.get('E');
    }
 
+   /**
+    * For instance,
+    * the order in which units take their turns within a round is the reading order of their starting positions in that round,
+    * regardless of the type of unit or whether other units have moved after the round started.
+    */
    List<Unit> unitsInTurnOrder() {
       return unitsBySymbol.values().stream()
          .flatMap(Collection::stream)
          .filter(Unit::isAlive)
-         .sorted()
+         .sorted(Unit.turnOrder)
          .collect(toList());
    }
 
+   /**
+    * Combat proceeds in rounds;
+    * in each round,
+    * each unit that is still alive takes a turn,
+    * resolving all of its actions before the next unit's turn begins.
+    * On each unit's turn,
+    * it tries to move into range of an enemy (if it isn't already)
+    * and then attack (if it is in range).
+    */
    boolean playRound(boolean debug, int round) {
       AtomicInteger curr = new AtomicInteger();
       final Iterator<Unit> uter = unitsInTurnOrder().iterator();
@@ -90,7 +112,7 @@ class Cavern {
 
          assert u.getHitPoints() > 0 : "Dead units don't fight";
          // Any enemies within striking distance?
-         List<Unit> adjacentEnemies = u.adjacentEnemies();
+         List<Unit> adjacentEnemies = u.adjacentEnemiesInWeaknessOrder();
          if (adjacentEnemies.isEmpty()) {
             final Optional<Lot> bestMove = u.bestMoveToAttackEnemy();
 
@@ -101,16 +123,20 @@ class Cavern {
 
             if (bestMove.isPresent()) {
                u.moveTo(bestMove.get());
-               adjacentEnemies = u.adjacentEnemies();
+               adjacentEnemies = u.adjacentEnemiesInWeaknessOrder();
             }
          }
+         // After moving (or if the unit began its turn in range of a target),
+         // the unit attacks.
          if (!adjacentEnemies.isEmpty()) {
             warOver = adjacentEnemies.stream()
-               .sorted(comparingInt(Unit::getHitPoints))
                .findFirst()
                .map(u::attack)
                .map(tru -> areAllEnemiesDefeated(u))
                .orElse(false);
+         } else{
+         // If the unit cannot reach (find an open path to) any of the squares that are in range,
+         // it ends its turn.
          }
       }
       return uter.hasNext();
