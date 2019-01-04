@@ -5,16 +5,16 @@ import static java.lang.System.out;
 
 public class Day<A1, A2> {
 
-   A1 ans1;
-   A2 ans2;
-   long load = currentTimeMillis();
-   long loadMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-   long start;
-   long startMem;
-   long mid;
-   long midMem;
-   long end;
-   long endMem;
+   private A1 ans1;
+   private A2 ans2;
+   private long load = currentTimeMillis();
+   private long loadMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+   private long start;
+   private long startMem;
+   private long mid;
+   private long midMem;
+   private long end;
+   private long endMem;
 
    public void start() {
       start = currentTimeMillis();
