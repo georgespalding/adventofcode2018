@@ -114,7 +114,7 @@ class Cavern {
          // Any enemies within striking distance?
          List<Unit> adjacentEnemies = u.adjacentEnemiesInWeaknessOrder();
          if (adjacentEnemies.isEmpty()) {
-            final Optional<Lot> bestMove = u.bestMoveToAttackEnemy();
+            final Optional<Lot> bestMove = u.bestMoveToAttackEnemy(getEnemies(u));
 
             if (debug) {
                System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u + " -> " + bestMove);
@@ -196,13 +196,17 @@ class Cavern {
 
    private boolean areAllEnemiesDefeated(Unit u) {
       // Is war over?
-      final List<Unit> enemyUnits = unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E')
-         .stream().filter(e -> e.getHitPoints() > 0)
-         .collect(toList());
+      final List<Unit> enemyUnits = getEnemies(u);
       if (enemyUnits.isEmpty()) {
          DayFifteen.debug("battle is over");
       }
       return enemyUnits.isEmpty();
+   }
+
+   private List<Unit> getEnemies(Unit u) {
+      return unitsBySymbol.get(u.symbol() == 'E' ? 'G' : 'E').stream()
+         .filter(Unit::isAlive)
+         .collect(toList());
    }
 
    boolean warIsStillOn() {

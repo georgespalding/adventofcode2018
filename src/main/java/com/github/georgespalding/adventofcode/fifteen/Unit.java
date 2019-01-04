@@ -5,15 +5,20 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import com.github.georgespalding.adventofcode.Pair;
+
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class Unit {
@@ -33,7 +38,6 @@ class Unit {
          .thenComparing(o -> o.lot.pos);
    private final char symbol;
    private final int attackPower;
-
    // Each unit, either Goblin or Elf, ... starts with 200 hit points.
    private int hitPoints = 200;
    private Lot lot;
@@ -125,6 +129,97 @@ class Unit {
          ", hitPoints=" + hitPoints +
          ", lot=" + lot +
          '}';
+   }
+
+   Optional<Lot> bestMoveToAttackEnemy(Collection<Unit> enemies) {
+      final Set<Lot> enemyLots = enemies.stream()
+         .map(r -> r.lot)
+         .flatMap(Lot::adjacentSpace)
+         .collect(Collectors.toSet());
+      return closestTarget(lot, enemyLots)
+         .flatMap(dest ->
+            this.lot.adjacentSpace()
+               .map(startLot -> Pair.fromEntry(shortestDistance(startLot, dest), startLot))
+               .filter(p1 -> p1.getKey().isPresent())
+               .min(comparingInt((Pair<OptionalInt, Lot> o) -> o.getKey().getAsInt())
+                  .thenComparing(Pair::getVal))
+               .map(Pair::getVal));
+   }
+
+   private Optional<Lot> selectBestDestinationLot(Collection<Unit> enemies) {
+      return enemyRangeDistance(enemies)
+         .entrySet().stream()
+         .collect(groupingBy(Entry::getValue))
+         .entrySet().stream()
+         .min(comparingInt(Entry::getKey))
+         .flatMap(ls -> ls
+            .getValue().stream()
+            .min(comparing(Entry::getKey))
+            .map(Entry::getKey));
+   }
+
+   OptionalInt shortestDistance(Lot start, Lot dest) {
+      final Set<Lot> enemyLots = Set.of(dest);
+      int dist = 0;
+      List<Lot> edges = Collections.singletonList(start);
+      final Set<Lot> alreadySearched = new HashSet<>(edges);
+
+      while (!edges.isEmpty()) {
+         for (Lot l : edges) {
+            if (enemyLots.contains(l)) {
+               return OptionalInt.of(dist);
+            }
+         }
+         dist++;
+         edges = flood(edges, alreadySearched);
+         alreadySearched.addAll(edges);
+      }
+      return OptionalInt.empty();
+   }
+
+   Map<Lot, Integer> enemyRangeDistance(Collection<Unit> enemies) {
+      return enemyRangeDistance(lot, enemies);
+   }
+
+   Map<Lot, Integer> enemyRangeDistance(Lot aLot, Collection<Unit> enemies) {
+      final Set<Lot> enemyLots = enemies.stream()
+         .map(r -> r.lot)
+         .flatMap(Lot::adjacentSpace)
+         .collect(Collectors.toSet());
+      final Map<Lot, Integer> res = new HashMap<>();
+      int dist = 0;
+      List<Lot> edges = Collections.singletonList(aLot);
+      final Set<Lot> alreadySearched = new HashSet<>(edges);
+
+      while (!edges.isEmpty()) {
+         for (Lot l : edges) {
+            if (enemyLots.contains(l)) {
+               res.put(l, dist);
+            }
+         }
+         dist++;
+         edges = flood(edges, alreadySearched);
+         alreadySearched.addAll(edges);
+      }
+      return res;
+   }
+
+   Optional<Lot> closestTarget(Lot aLot, Set<Lot> enemyLots) {
+      final Map<Lot, Integer> res = new HashMap<>();
+      int dist = 0;
+      List<Lot> edges = Collections.singletonList(aLot);
+      final Set<Lot> alreadySearched = new HashSet<>(edges);
+
+      while (!edges.isEmpty()) {
+         Optional<Lot> first = edges.stream().filter(enemyLots::contains).sorted().findFirst();
+         if (first.isPresent()) {
+            return first;
+         }
+         dist++;
+         edges = flood(edges, alreadySearched);
+         alreadySearched.addAll(edges);
+      }
+      return Optional.empty();
    }
 
    Optional<Lot> bestMoveToAttackEnemy() {
