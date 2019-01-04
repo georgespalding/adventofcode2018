@@ -1,5 +1,6 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
+import static java.lang.System.out;
 import static java.util.stream.Collectors.toList;
 
 import com.github.georgespalding.adventofcode.Util;
@@ -7,10 +8,11 @@ import com.github.georgespalding.adventofcode.template.Day;
 
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 
 public class DayFifteen {
 
-   static final boolean debug = true;
+   static final boolean debug = false;
    private static final Day<Object, Integer> day15 = new Day<>();
    private static final String INPUT = "15/15.lst";
 
@@ -23,13 +25,7 @@ public class DayFifteen {
          int rounds = 0;
          while (cavern.warIsStillOn()) {
             boolean roundEndedPrematurely = cavern.playRound(false, rounds + 1);
-            if (!roundEndedPrematurely) {
-               rounds++;
-               System.out.println("After " + rounds + " rounds:");
-            } else {
-               System.out.println("After " + (rounds + 1) + " rounds:");
-            }
-            System.out.println(cavern.toString());
+            rounds = debugRounds(cavern, rounds, roundEndedPrematurely);
          }
 
          int hpSum = cavern.unitsInTurnOrder().stream()
@@ -39,10 +35,8 @@ public class DayFifteen {
          day15.partOne(hpSum * rounds);
       }
 
-//                      System.exit(0);
-      
-      int lo = 3;//TODO change to 3
-      int hi = 35;//TODO change to 35
+      int lo = 3;
+      int hi = 35;
       boolean hiOk = runGame(hi).isPresent();
       assert hiOk : "Hi elfAttack " + hi + " is not high enough";
       OptionalInt lowestElfAttack = OptionalInt.empty();
@@ -59,8 +53,8 @@ public class DayFifteen {
             lo = next;
          }
       }
-      System.out.println("Elf attack: " + lowestElfAttack);
-      day15.partTwo(elfLowestWinningScore.getAsInt());     
+      out.println("Elf attack: " + lowestElfAttack);
+      day15.partTwo(elfLowestWinningScore.getAsInt());
       day15.output();
    }
 
@@ -74,13 +68,7 @@ public class DayFifteen {
       while (cavern.warIsStillOn()) {
          boolean roundEndedPrematurely = cavern.playRound(
             debug && elfAttach == 12, rounds + 1);
-         if (!roundEndedPrematurely) {
-            rounds++;
-            debug("After " + rounds + " rounds:");
-         } else {
-            debug("After " + (rounds + 1) + " rounds:");
-         }
-         debug(cavern.toString());
+         rounds = debugRounds(cavern, rounds, roundEndedPrematurely);
       }
       final long survivedElves = cavern.getElves().stream().filter(Unit::isAlive).count();
       final int hpSum = cavern.getElves().stream()
@@ -88,16 +76,16 @@ public class DayFifteen {
          .mapToInt(Unit::getHitPoints)
          .sum();
 
-      System.out.println(origOrder.stream()
+      out.println(origOrder.stream()
          .map(Unit::getHitPoints)
          .collect(toList()));
-      System.out.println("Elf attack: " + elfAttach
+      out.println("Elf attack: " + elfAttach
          + " Surviving elves: " + survivedElves
          + " of " + cavern.getElves().size() + " in total");
-      System.out.println("Combat ends after " + rounds + " full rounds");
-      System.out.println((survivedElves == 0 ? "Goblins" : "Elves") + " win with " + hpSum + " total hit points left");
-      System.out.println("Outcome: " + rounds + " * " + hpSum + " = " + (rounds * hpSum));
-      System.out.println();
+      out.println("Combat ends after " + rounds + " full rounds");
+      out.println((survivedElves == 0 ? "Goblins" : "Elves") + " win with " + hpSum + " total hit points left");
+      out.println("Outcome: " + rounds + " * " + hpSum + " = " + (rounds * hpSum));
+      out.println();
       if (survivedElves == cavern.getElves().size()) {
          return OptionalInt.of(rounds * hpSum);
       } else {
@@ -105,9 +93,24 @@ public class DayFifteen {
       }
    }
 
+   private static int debugRounds(Cavern cavern, int rounds, boolean roundEndedPrematurely) {
+      if (!roundEndedPrematurely) {
+         rounds++;
+         debug("After " + rounds + " rounds:");
+      } else {
+         debug("After " + (rounds + 1) + " rounds:");
+      }
+      debug(cavern::toString);
+      return rounds;
+   }
+
    static void debug(String stuff) {
+      debug(() -> stuff);
+   }
+
+   static void debug(Supplier<String> stuff) {
       if (debug) {
-         System.out.println(stuff);
+         out.println(stuff.get());
       }
    }
 }

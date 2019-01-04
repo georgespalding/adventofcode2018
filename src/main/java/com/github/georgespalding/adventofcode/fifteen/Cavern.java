@@ -1,5 +1,6 @@
 package com.github.georgespalding.adventofcode.fifteen;
 
+import static java.lang.System.out;
 import static java.util.Arrays.stream;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -117,8 +118,8 @@ class Cavern {
             final Optional<Lot> bestMove = u.bestMoveToAttackEnemy(getEnemies(u));
 
             if (debug) {
-               System.out.println("During " + round + ":" + curr.incrementAndGet() + " " + u + " -> " + bestMove);
-               System.out.println(toString());
+               out.println("During " + round + ":" + curr.incrementAndGet() + " " + u + " -> " + bestMove);
+               out.println(toString());
             }
 
             if (bestMove.isPresent()) {
@@ -134,7 +135,7 @@ class Cavern {
                .map(u::attack)
                .map(tru -> areAllEnemiesDefeated(u))
                .orElse(false);
-         } else{
+         // } else{
          // If the unit cannot reach (find an open path to) any of the squares that are in range,
          // it ends its turn.
          }
