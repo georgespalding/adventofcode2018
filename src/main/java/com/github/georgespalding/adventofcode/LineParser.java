@@ -31,6 +31,10 @@ public class LineParser {
       return Integer.parseInt(next(delim));
    }
 
+   public long nextLong(char delim) {
+      return Long.parseLong(next(delim));
+   }
+
    Claim parseClaim() {
       return new Claim(
          next('@'),
