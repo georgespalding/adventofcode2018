@@ -25,8 +25,7 @@ public class Grid {
    private final Element start;
    private final List<List<Element>> gridRows;
    private final Set<Element> reachableRooms = new HashSet<>();
-   private final Element furthestRoom;
-   private final List<Element> cornerOffices;
+   private final Map<Element, Integer> roomDist;
 
    Grid(int roomRadius, IntSupplier is) {
       int radius = 2 * roomRadius + 1;
@@ -86,18 +85,7 @@ public class Grid {
       pruneToEdge(true);
       pruneToEdge(false);
 
-      List<Element> firstRoomRow = gridRows.get(1);
-      List<Element> lastRoomRow = gridRows.get(gridRows.size() - 2);
-      cornerOffices = Stream.of(
-         firstRoomRow.get(1),
-         firstRoomRow.get(firstRoomRow.size() - 2),
-         lastRoomRow.get(1),
-         lastRoomRow.get(lastRoomRow.size() - 2))
-         .sorted()
-         .collect(Collectors.toList());
-      furthestRoom = cornerOffices.stream()
-         .sorted(comparingInt(e -> -start.manhattanDistance(e)))
-         .findFirst().get();
+      roomDist = calcMinDoorsPassedToEachRoom();
       if (Day20.debug) {
          // turn unreachable . into # (if there are any?)
          final long unreachableRooms = gridRows.stream().flatMap(Collection::stream)
@@ -118,8 +106,6 @@ public class Grid {
             + gridRows.get(0).get(gridRows.get(0).size() - 1) + ", "
             + gridRows.get(gridRows.size() - 1).get(0) + ", "
             + gridRows.get(gridRows.size() - 1).get(gridRows.get(gridRows.size() - 1).size() - 1));
-         System.out.println("Corner offices:" + cornerOffices);
-         System.out.println("Furthest room:" + furthestRoom);
       }
    }
 
@@ -243,12 +229,17 @@ public class Grid {
    }
 
    Map.Entry<Integer, List<Element>> shortestToFurthestRoom() {
-      Map<Element, Integer> roomDist = calcMinDoorsPassedToEachRoom();
       return reachableRooms.stream()
          .collect(groupingBy(roomDist::get))
          .entrySet().stream()
          .sorted(comparingInt(each -> -each.getKey()))
          .findFirst().get();
+   }
+
+   long roomsAtLeastXDoorsAway(int x) {
+      return reachableRooms.stream()
+         .filter(e->roomDist.get(e)>=x)
+         .count();
    }
 
    class Element implements Comparable<Element> {

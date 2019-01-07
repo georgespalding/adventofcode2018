@@ -36,7 +36,7 @@ public class Day20 {
 
       day.partOne(grid.shortestToFurthestRoom());
       System.out.println(grid);
-      day.partTwo("TODO");
+      day.partTwo(grid.roomsAtLeastXDoorsAway(1000));
 
       day.output();
    }
